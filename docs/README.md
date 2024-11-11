@@ -22,10 +22,10 @@ The app is designed to enhance your travel planning by providing useful and inte
   React with Typescript
 
 - **Backend**:
-  Django (Python)
+  FastApi (Python)
 
 - **Database**:
-  PostgreSQL
+  MongoDB
 
 - **Authentication**:
-  tbd
+  JWT Token, RBAC with admin and user roles
