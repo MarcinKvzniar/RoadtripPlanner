@@ -1,4 +1,5 @@
 ## RoadTrip Planner
+
 Repository containing final project for Network Technologies - Project course on winter term 2024/25.
 
 ## Overview
@@ -16,19 +17,15 @@ The app is designed to enhance your travel planning by providing useful and inte
 - **User Authentication**: Secure user registration and login system to keep your trips private.
 
 ## Tech stack
+
 - **Frontend**:
-  tbd
+  React with Typescript
 
 - **Backend**:
-  tbd
+  Django (Python)
 
 - **Database**:
-  tbd
+  PostgreSQL
 
 - **Authentication**:
   tbd
-
-
-
-
-
