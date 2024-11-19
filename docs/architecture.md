@@ -8,12 +8,12 @@
 
 ## 1. Technologies Used
 
-- **Backend**: Django (Python)
+- **Backend**: FastAPI (Python)
 - **Frontend**: React (TypeScript)
-- **Database**: PostgreSQL for persistence of user data, trip details, and visited locations
+- **Database**: MongoDB for persistence of user data, trip details, and visited locations
 - **API Integration**: External APIs for street rules by country (Google Maps API, UNESCO API)
-- **Authentication**: Django Authentication with JWT tokens for secure user sessions
-- **Deployment**: Docker for containerization, Nginx as a reverse proxy, and Gunicorn for WSGI
+- **Authentication**: FastAPI Authentication with JWT tokens for secure user sessions
+- **Deployment**: Docker for containerization, Nginx as a reverse proxy, and Uvicorn for WSGI
 
 ---
 
@@ -31,9 +31,9 @@
 
 - **Data Flow**: React will use Redux or Context API to manage application state, including user sessions and map data. API calls to the backend will be managed by Axios.
 
-### 2.2 Backend (Django)
+### 2.2 Backend (FastAPI)
 
-- **REST API**: Django REST Framework (DRF) will expose RESTful API endpoints for frontend interaction.
+- **REST API**: Fast API Framework will expose RESTful API endpoints for frontend interaction.
 - **Modules**:
   - **User Management**: Handles registration, login, and user-specific data (trips and visited locations).
   - **Trip Management**: CRUD operations for creating, updating, saving, and loading trips.
@@ -41,9 +41,9 @@
   - **Street Rules API Module**: Interfaces with external APIs to retrieve country-specific road rules.
 - **Authentication & Authorization**: JWT tokens will be issued on login and validated on each request for access control.
 
-### 2.3 Database (PostgreSQL)
+### 2.3 Database (MongoDB)
 
-- **Schemas**:
+- **Collections**:
   - **User**: Stores user profile and authentication data.
   - **Trip**: Stores trip details, including trip name, starting point, endpoints, and stops.
   - **VisitedPoint**: Tracks locations a user has marked as visited.
@@ -60,25 +60,25 @@
 
 1. **User Login and Registration**:
 
-   - User submits credentials to Django API.
-   - Django authenticates the user and returns a JWT token.
+   - User submits credentials to API.
+   - API authenticates the user and returns a JWT token.
    - The frontend stores the token for subsequent requests.
 
 2. **Trip Management**:
 
    - User interacts with the map and adds stops.
-   - React component sends POST/PUT requests to the Django API to save or update trip data.
-   - Django stores the trip information in the PostgreSQL database.
+   - React component sends POST/PUT requests to the API to save or update trip data.
+   - API stores the trip information in the MongoDB database.
 
 3. **Street Rules Lookup**:
 
-   - When a user’s trip passes through a new country, a GET request is sent to Django.
-   - Django calls the external Street Rules API, caches the response, and returns it to React.
+   - When a user’s trip passes through a new country, a GET request is sent to API.
+   - API calls the external Street Rules API, caches the response, and returns it to React.
    - The frontend displays the rules to the user in the Street Rules Component.
 
 4. **Visited Points**:
-   - User marks a location as visited, and a request is sent to the Django API.
-   - Django updates the `VisitedPoint` table for the user, and the frontend updates the map display.
+   - User marks a location as visited, and a request is sent to the API.
+   - API updates the `VisitedPoint` table for the user, and the frontend updates the map display.
 
 ---
 
@@ -92,11 +92,11 @@
 2. **Staging**:
 
    - Deploy to a staging server for testing.
-   - Automate with Docker Compose to deploy the Django and React containers.
+   - Automate with Docker Compose to deploy the fastAPI and React containers.
 
 3. **Production**:
    - Nginx as a reverse proxy to serve static files and route requests.
-   - Gunicorn as the application server for Django.
+   - Uvicorn as the application server for fastAPI.
    - Continuous integration (CI) and deployment (CD) set up for efficient updates.
 
 ---
@@ -105,7 +105,7 @@
 
 - **Frontend**: Graceful error messages for failed actions like saving trips or loading map data.
 - **Backend**:
-  - Logging with Django’s logging framework.
+  - Logging with logging framework.
   - Custom error messages for each endpoint to assist in debugging.
 
 ---
@@ -119,7 +119,7 @@ API documentation will be created using **Swagger**, detailing each endpoint’s
 ## 7. Testing
 
 - **Frontend**: Unit tests with Jest and integration tests using React Testing Library.
-- **Backend**: Unit tests for each API endpoint, and integration tests with Django’s testing tools.
+- **Backend**: Unit tests for each API endpoint, and integration tests with Pytest testing tools.
 - **End-to-End Testing**: Optional testing of core flows using Cypress or Selenium.
 
 ---
