@@ -1,0 +1,57 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #87ceeb, #4682b4);
+  font-family: 'Pirata One', cursive, sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+.pirate-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  position: relative;
+}
+
+.pirate-title {
+  font-size: 5rem;
+  margin: 0;
+  animation: sway 3s ease-in-out infinite;
+}
+
+.pirate-message {
+  font-size: 1.5rem;
+  margin: 10px 0;
+}
+
+.pirate-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #ff4500;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 5px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pirate-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 20px rgba(255, 69, 0, 0.7);
+}
+
+/* Swaying Animation for Title */
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}

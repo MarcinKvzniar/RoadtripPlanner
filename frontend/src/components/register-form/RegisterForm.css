@@ -1,0 +1,107 @@
+body {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.register-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-family: 'Pirata One', cursive, sans-serif;
+  background: linear-gradient(135deg, #ff9800, #f44336);
+  color: white;
+}
+
+.title {
+  font-size: 32px;
+  color: white;
+  margin-bottom: 20px;
+  animation: sway 3s ease-in-out infinite; /* Add a sway animation to the title */
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: white;
+}
+
+.input-container {
+  position: relative;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #555;
+}
+
+input {
+  width: 100%;
+  padding: 10px 10px 10px 40px; /* Adjust padding to make space for the icon */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 16px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: background-color 0.3s ease;
+}
+
+input:focus {
+  background-color: rgba(255, 255, 255, 1); /* Lighter background on focus */
+  border-color: #ff9800;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #ff9800;
+  color: white;
+  border: black;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #4836f1;
+  transform: scale(1.05);
+}
+
+.error {
+  color: red;
+  margin-bottom: 15px;
+  text-align: center;
+}
