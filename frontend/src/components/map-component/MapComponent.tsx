@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -9,6 +9,8 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './MapComponent.css';
 
 const getFlagIcon = (country: string) => {
@@ -31,12 +33,27 @@ const getFlagIcon = (country: string) => {
 
 const MapComponent: React.FC = () => {
   const [markers, setMarkers] = useState<
-    { lat: number; lng: number; country: string }[]
+    { lat: number; lng: number; country: string; type: string }[]
   >([]);
+  const [modalData, setModalData] = useState<{
+    lat: number;
+    lng: number;
+    isOpen: boolean;
+  }>({ lat: 0, lng: 0, isOpen: false });
+  const [searchQuery, setSearchQuery] = useState('');
+  const mapRef = useRef<L.Map>(null);
 
-  const addMarker = async (e: L.LeafletMouseEvent) => {
+  // Handle click on the map to show the modal
+  const handleMapClick = (e: L.LeafletMouseEvent) => {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
+
+    setModalData({ lat, lng, isOpen: true });
+  };
+
+  // Add a marker based on the modal action
+  const handleAddMarker = async (type: string) => {
+    const { lat, lng } = modalData;
 
     try {
       const response = await axios.get(
@@ -46,52 +63,108 @@ const MapComponent: React.FC = () => {
         }
       );
       let country = response.data.address.country || 'Unknown';
-      console.log('Country:', country);
       country = country.toLowerCase().replace(/\s+/g, '-');
-      setMarkers([...markers, { lat, lng, country }]);
+      setMarkers([...markers, { lat, lng, country, type }]);
     } catch (error) {
       console.error('Failed to fetch country name:', error);
-      setMarkers([...markers, { lat, lng, country: 'Unknown' }]);
+      setMarkers([...markers, { lat, lng, country: 'Unknown', type }]);
+    }
+
+    setModalData({ ...modalData, isOpen: false });
+  };
+
+  // Handle search for city
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.get(
+        'https://nominatim.openstreetmap.org/search',
+        {
+          params: { q: searchQuery, format: 'json', 'accept-language': 'en' },
+        }
+      );
+      if (response.data.length > 0) {
+        const { lat, lon } = response.data[0];
+        if (mapRef.current) {
+          mapRef.current.setView([parseFloat(lat), parseFloat(lon)], 13);
+        }
+      } else {
+        alert('City not found!');
+      }
+    } catch (error) {
+      console.error('Failed to search for city:', error);
+      alert('Failed to search for city!');
     }
   };
 
   return (
-    <div className="map-container">
-      <MapContainer
-        center={[51.11, 17.04]}
-        zoom={10}
-        className="percentage-map"
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        <MapEvents addMarker={addMarker} />
-        {markers.map((marker, idx) => (
-          <Marker
-            key={`marker-${idx}`}
-            position={[marker.lat, marker.lng]}
-            icon={getFlagIcon(marker.country)}
-          >
-            <Popup>
-              <span>{marker.country}</span>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-      <button>Determine Route</button>
-      <button>Save Trip</button>
+    <div className="map-page">
+      {/* Search Bar */}
+      <form onSubmit={handleSearch} className="search-bar">
+        <div className="search-input-wrapper">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for a city"
+            className="search-input"
+          />
+        </div>
+      </form>
+
+      {/* Map Container */}
+      <div className="map-container">
+        <MapContainer
+          center={[51.11, 17.04]}
+          zoom={10}
+          className="percentage-map"
+          ref={mapRef}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <MapEvents handleMapClick={handleMapClick} />
+          {markers.map((marker, idx) => (
+            <Marker
+              key={`marker-${idx}`}
+              position={[marker.lat, marker.lng]}
+              icon={getFlagIcon(marker.country)}
+            >
+              <Popup>
+                <span>
+                  {marker.country} ({marker.type})
+                </span>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      {/* Modal */}
+      {modalData.isOpen && (
+        <div className="modal">
+          Location: {modalData.lat.toFixed(4)}, {modalData.lng.toFixed(4)}
+          <button onClick={() => handleAddMarker('Visited')}>Visited</button>
+          <button onClick={() => handleAddMarker('Route')}>Add to Route</button>
+          <button onClick={() => setModalData({ ...modalData, isOpen: false })}>
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
+// Map Events component
 const MapEvents = ({
-  addMarker,
+  handleMapClick,
 }: {
-  addMarker: (e: L.LeafletMouseEvent) => void;
+  handleMapClick: (e: L.LeafletMouseEvent) => void;
 }) => {
   useMapEvents({
-    click: addMarker,
+    click: handleMapClick,
   });
   return null;
 };
