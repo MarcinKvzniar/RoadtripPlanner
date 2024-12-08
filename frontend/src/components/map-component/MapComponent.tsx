@@ -38,17 +38,41 @@ const MapComponent: React.FC = () => {
   const [modalData, setModalData] = useState<{
     lat: number;
     lng: number;
+    address: string;
     isOpen: boolean;
-  }>({ lat: 0, lng: 0, isOpen: false });
+  }>({ lat: 0, lng: 0, address: '', isOpen: false });
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<L.Map>(null);
 
   // Handle click on the map to show the modal
-  const handleMapClick = (e: L.LeafletMouseEvent) => {
+  const handleMapClick = async (e: L.LeafletMouseEvent) => {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
 
-    setModalData({ lat, lng, isOpen: true });
+    try {
+      const response = await axios.get(
+        'https://nominatim.openstreetmap.org/reverse',
+        {
+          params: {
+            lat,
+            lon: lng,
+            format: 'json',
+            'accept-language': 'en',
+          },
+        }
+      );
+
+      const address = response.data.display_name || 'Address not found';
+      setModalData({ lat, lng, address, isOpen: true });
+    } catch (error) {
+      console.error('Failed to fetch address:', error);
+      setModalData({
+        lat,
+        lng,
+        address: 'Unable to retrieve address',
+        isOpen: true,
+      });
+    }
   };
 
   // Add a marker based on the modal action
@@ -145,12 +169,25 @@ const MapComponent: React.FC = () => {
       {/* Modal */}
       {modalData.isOpen && (
         <div className="modal">
-          Location: {modalData.lat.toFixed(4)}, {modalData.lng.toFixed(4)}
-          <button onClick={() => handleAddMarker('Visited')}>Visited</button>
-          <button onClick={() => handleAddMarker('Route')}>Add to Route</button>
-          <button onClick={() => setModalData({ ...modalData, isOpen: false })}>
-            Cancel
-          </button>
+          <h2>Add Marker</h2>
+          <p>
+            <strong>Coordinates:</strong> {modalData.lat.toFixed(4)},{' '}
+            {modalData.lng.toFixed(4)}
+          </p>
+          <p>
+            <strong>Address:</strong> {modalData.address}
+          </p>
+          <div className="modal-buttons">
+            <button onClick={() => handleAddMarker('Visited')}>Visited</button>
+            <button onClick={() => handleAddMarker('Route')}>
+              Add to Route
+            </button>
+            <button
+              onClick={() => setModalData({ ...modalData, isOpen: false })}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
