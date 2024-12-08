@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -10,6 +11,7 @@ const LoginForm: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ const LoginForm: React.FC = () => {
       const response = await api.post('/login', { email, password });
       const { access_token, refresh_token } = response.data;
       login(access_token, refresh_token);
-      alert('Login successful!');
+      navigate('/map');
     } catch (error) {
       console.error('Login failed:', error);
       alert('Invalid credentials!');
