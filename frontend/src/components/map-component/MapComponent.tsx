@@ -9,9 +9,8 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import './MapComponent.css';
+import AppBar from '../app-bar/AppBar';
 
 const getFlagIcon = (country: string) => {
   try {
@@ -123,21 +122,13 @@ const MapComponent: React.FC = () => {
 
   return (
     <div className="map-page">
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} className="search-bar">
-        <div className="search-input-wrapper">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a city"
-            className="search-input"
-          />
-        </div>
-      </form>
+      <AppBar
+        mapRef={mapRef}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearch={handleSearch}
+      />
 
-      {/* Map Container */}
       <div className="map-container">
         <MapContainer
           center={[51.11, 17.04]}
@@ -166,7 +157,6 @@ const MapComponent: React.FC = () => {
         </MapContainer>
       </div>
 
-      {/* Modal */}
       {modalData.isOpen && (
         <div className="modal">
           <h2>Add Marker</h2>
