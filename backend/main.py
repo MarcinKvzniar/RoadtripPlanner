@@ -11,7 +11,7 @@ from typing import Optional, List
 import bson
 from icecream import ic
 import jwt
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Header
 from pydantic import BaseModel, EmailStr
 from pymongo.mongo_client import MongoClient
 from dotenv import load_dotenv
@@ -24,7 +24,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 # module imports
 from models import User, UserCreate, UserInDB, Token, TokenData, LoginRequest, RegisterRequest, UserResponse, \
-    RefreshRequest, TokenRequest
+    RefreshRequest, TokenRequest, DestinationModel
 from security import get_password_hash, verify_password, oauth2_scheme, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, REFRESH_TOKEN_EXPIRE_MINUTES, create_refresh_token
 
@@ -201,7 +201,8 @@ async def register_new_user(register_request: RegisterRequest):
         email=register_request.email,
         hashed_password=hashed_password,
         full_name=register_request.full_name,
-        role="USER"
+        role="USER",
+        destinations = [],
     )
     added_user = add_user_to_db(collection_users, new_user)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -353,3 +354,47 @@ async def healthcheck():
         identification/ healthcheck endpoint
     """
     return {"RoadTripPlan": "ONLINE"}
+
+@app.post("/save_destination", response_model=UserResponse)
+async def save_destination(destination: DestinationModel, authorization: str = Header(...)):
+    """
+        Save destination information to user's destinations field
+
+        Args:
+            destination (DestinationModel): destination information
+            authorization (str): Bearer token from authorization header
+
+        Returns:
+            user (UserResponse): updated user information
+
+        Raises:
+            HTTP Exception 401 if token is invalid or user not found.
+            HTTP Exception 400 if destination name is not unique.
+     """
+    token = authorization.split(" ")[1]
+    user_id = extract_user_id_from_token(token)
+    user = get_user_by_id(collection_users, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if any(dest.name == destination.name for dest in user.destinations):
+        raise HTTPException(status_code=400, detail="Destination name must be unique")
+
+    user.destinations.append(destination)
+    collection_users.update_one({"_id": ObjectId(user_id)}, {"$set": {"destinations": [dest.dict() for dest in user.destinations]}})
+
+    return UserResponse(**user.dict())
+
+
+@app.get("/get_destinations", response_model=List[DestinationModel])
+async def retrieve_destination_multiple(authorization: str = Header(...)):
+    """
+    Get all destinations for the current user (JWT)
+    """
+    token = authorization.split(" ")[1]
+    user_id = extract_user_id_from_token(token)
+    user = get_user_by_id(collection_users, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return user.destinations
