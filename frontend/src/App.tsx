@@ -15,13 +15,19 @@ const App: React.FC = () => {
           {/* Public routes */}
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
-
           {/* Private routes */}
           <Route path="/map" element={<MapComponent />} />
-
+          <Route path="/get_me" element={<h1>Nothing is here</h1>} />{' '}
+          {/* TODO */}
+          <Route
+            path="/visited-places"
+            element={<h1>Nothing is here</h1>}
+          />{' '}
+          {/* TODO */}
+          <Route path="/road-trips" element={<h1>Nothing is here</h1>} />{' '}
+          {/* TODO */}
           {/* Not found route */}
           <Route path="*" element={<NotFoundPage />} />
-
           {/* Login redirect */}
           <Route path="/" element={<LoginForm />} />
         </Routes>
