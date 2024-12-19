@@ -13,21 +13,16 @@ import './MapComponent.css';
 import AppBar from '../app-bar/AppBar';
 
 const getFlagIcon = (country: string) => {
-  try {
-    return L.icon({
-      iconUrl: `/utils/flags/${country}.png`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-      popupAnchor: [0, -16],
-    });
-  } catch {
-    return L.icon({
-      iconUrl: '/utils/flags/default.png',
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-      popupAnchor: [0, -16],
-    });
-  }
+  const iconUrl =
+    country === 'Unknown'
+      ? '/utils/flags/default.png'
+      : `/utils/flags/${country}.png`;
+  return L.icon({
+    iconUrl,
+    iconSize: [16, 16],
+    iconAnchor: [8, 16],
+    popupAnchor: [0, -16],
+  });
 };
 
 const MapComponent: React.FC = () => {
@@ -38,8 +33,9 @@ const MapComponent: React.FC = () => {
     lat: number;
     lng: number;
     address: string;
+    country: string;
     isOpen: boolean;
-  }>({ lat: 0, lng: 0, address: '', isOpen: false });
+  }>({ lat: 0, lng: 0, address: '', country: 'unknown', isOpen: false });
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<L.Map>(null);
 
@@ -61,14 +57,20 @@ const MapComponent: React.FC = () => {
         }
       );
 
-      const address = response.data.display_name || 'Address not found';
-      setModalData({ lat, lng, address, isOpen: true });
+      const address = response.data.address;
+      const country = address.country
+        ? address.country.toLowerCase().replace(/\s+/g, '-')
+        : 'unknown';
+      const fullAddress = response.data.display_name || 'Address not found';
+
+      setModalData({ lat, lng, address: fullAddress, country, isOpen: true });
     } catch (error) {
       console.error('Failed to fetch address:', error);
       setModalData({
         lat,
         lng,
         address: 'Unable to retrieve address',
+        country: 'unknown',
         isOpen: true,
       });
     }
@@ -87,6 +89,12 @@ const MapComponent: React.FC = () => {
       );
       let country = response.data.address.country || 'Unknown';
       country = country.toLowerCase().replace(/\s+/g, '-');
+      if (country === 'south-ossetia' || country === 'abkhazia')
+        country = 'georgia'; /*/ Free Georgia, wtf is this api */
+      if (country === 'northern-cyprus')
+        country = 'cyprus'; /*/ there is no such a country lol /*/
+      if (country === 'unknown') country = 'default'; /*/ default flag /*/
+
       setMarkers([...markers, { lat, lng, country, type }]);
     } catch (error) {
       console.error('Failed to fetch country name:', error);
@@ -120,6 +128,19 @@ const MapComponent: React.FC = () => {
     }
   };
 
+  // Handle deleting marker
+  const handleDeleteMarker = (lat: number, lng: number) => {
+    setMarkers(
+      markers.filter((marker) => marker.lat !== lat || marker.lng !== lng)
+    );
+  };
+
+  // Handle saving visited places
+  const saveMarkedPlaces = () => console.log('Save Marked Places'); /* TODO */
+
+  // Handle saving road trip
+  const saveRoadTrip = () => console.log('Save Road Trip'); /* TODO */
+
   return (
     <div className="map-page">
       <AppBar
@@ -127,18 +148,23 @@ const MapComponent: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleSearch={handleSearch}
+        saveMarkedPlaces={saveMarkedPlaces} /* TODO */
+        saveRoadTrip={saveRoadTrip} /* TODO */
       />
 
       <div className="map-container">
         <MapContainer
           center={[51.11, 17.04]}
           zoom={10}
+          minZoom={3}
           className="percentage-map"
           ref={mapRef}
+          worldCopyJump={true}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            noWrap={false}
           />
           <MapEvents handleMapClick={handleMapClick} />
           {markers.map((marker, idx) => (
@@ -148,9 +174,31 @@ const MapComponent: React.FC = () => {
               icon={getFlagIcon(marker.country)}
             >
               <Popup>
-                <span>
-                  {marker.country} ({marker.type})
-                </span>
+                <div>
+                  <p>
+                    <strong>Country:</strong> {marker.country.toUpperCase()}
+                  </p>
+                  <p>
+                    <strong>Coordinates:</strong> {marker.lat.toFixed(4)},{' '}
+                    {marker.lng.toFixed(4)}
+                  </p>
+                  <p>
+                    <strong>Type:</strong> {marker.type}
+                  </p>
+                  <button
+                    onClick={() => handleDeleteMarker(marker.lat, marker.lng)}
+                    style={{
+                      backgroundColor: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      padding: '5px 10px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete Marker
+                  </button>
+                </div>
               </Popup>
             </Marker>
           ))}

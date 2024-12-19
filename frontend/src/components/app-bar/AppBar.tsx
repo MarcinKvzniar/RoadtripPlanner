@@ -7,6 +7,8 @@ import {
   faCar,
   faSearch,
   faGlobe,
+  faBookmark,
+  faRoute,
 } from '@fortawesome/free-solid-svg-icons';
 import './AppBar.css';
 
@@ -15,6 +17,8 @@ interface AppBarProps {
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   handleSearch: (e: React.FormEvent) => void;
   searchQuery: string;
+  saveMarkedPlaces: () => void;
+  saveRoadTrip: () => void;
 }
 
 const AppBar: React.FC<AppBarProps> = ({
@@ -22,6 +26,8 @@ const AppBar: React.FC<AppBarProps> = ({
   setSearchQuery,
   handleSearch,
   searchQuery,
+  saveMarkedPlaces,
+  saveRoadTrip,
 }) => {
   const navigate = useNavigate();
 
@@ -34,6 +40,7 @@ const AppBar: React.FC<AppBarProps> = ({
           <button
             className="logo-icon"
             onClick={() => mapRef.current?.flyTo([51.11, 17.04], 5)}
+            title="Center the Map"
           >
             <FontAwesomeIcon icon={faGlobe} />
           </button>
@@ -61,10 +68,17 @@ const AppBar: React.FC<AppBarProps> = ({
         <div className="app-bar-icons">
           <button
             className="app-bar-button"
-            onClick={() => navigate('/profile')}
-            title="User Profile"
+            onClick={saveMarkedPlaces}
+            title="Save Marked Places"
           >
-            <FontAwesomeIcon icon={faUser} />
+            <FontAwesomeIcon icon={faBookmark} />
+          </button>
+          <button
+            className="app-bar-button"
+            onClick={saveRoadTrip}
+            title="Save Visited Trip"
+          >
+            <FontAwesomeIcon icon={faRoute} />
           </button>
           <button
             className="app-bar-button"
@@ -79,6 +93,13 @@ const AppBar: React.FC<AppBarProps> = ({
             title="Road Trip Plans"
           >
             <FontAwesomeIcon icon={faCar} />
+          </button>
+          <button
+            className="app-bar-button"
+            onClick={() => navigate('/get_me')}
+            title="User Profile"
+          >
+            <FontAwesomeIcon icon={faUser} />
           </button>
         </div>
       </div>
