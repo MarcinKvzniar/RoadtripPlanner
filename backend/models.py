@@ -13,6 +13,7 @@ class DestinationModel(BaseModel):
     lat: float
     lon: float
     address: str
+    country: str
     visited: bool
 
     @field_validator('name')
