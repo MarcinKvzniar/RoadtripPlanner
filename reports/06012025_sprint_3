@@ -1,0 +1,14 @@
+# Sprint 3 Report
+
+### Accomplished
+* Backend: bugfix, local dev in data models
+* Frontend: added flag markers for map, fixed interactive map element, implemented app bar for the map component
+
+### Challenges
+* integration of map with OSRM API integration
+* half of the dev team on a other continent...
+
+### Tasks for the next sprint
+* Destination element on satep
+
+#### 06.01.2025 Marcin Kuzniar & Dominik Cedro - sprint 3 (11.12.2024-10.01.2025)
