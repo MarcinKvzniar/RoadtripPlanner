@@ -5,12 +5,15 @@ import {
   Marker,
   Popup,
   useMapEvents,
+  Polyline,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 import './MapComponent.css';
 import AppBar from '../app-bar/AppBar';
+import polyline from '@mapbox/polyline';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -38,6 +41,12 @@ const MapComponent: React.FC = () => {
   }>({ lat: 0, lng: 0, address: '', country: 'unknown', isOpen: false });
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<L.Map>(null);
+  const [routeMarkers, setRouteMarkers] = useState<
+    { lat: number; lng: number; address: string }[]
+  >([]);
+  const [route, setRoute] = useState<[number, number][]>([]);
+  const [travelTimes, setTravelTimes] = useState<string[]>([]);
+  const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
 
   // Handle click on the map to show the modal
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
@@ -61,9 +70,20 @@ const MapComponent: React.FC = () => {
       const country = address.country
         ? address.country.toLowerCase().replace(/\s+/g, '-')
         : 'unknown';
-      const fullAddress = response.data.display_name || 'Address not found';
 
-      setModalData({ lat, lng, address: fullAddress, country, isOpen: true });
+      const street =
+        `${address.road} ${address.house_number || ''}`.trim() ||
+        'Unknown Street';
+      const city =
+        address.city || address.town || address.village || 'Unknown City';
+
+      setModalData({
+        lat,
+        lng,
+        address: `${street}, ${city}, ${address.country}`,
+        country,
+        isOpen: true,
+      });
     } catch (error) {
       console.error('Failed to fetch address:', error);
       setModalData({
@@ -96,12 +116,74 @@ const MapComponent: React.FC = () => {
       if (country === 'unknown') country = 'default'; /*/ default flag /*/
 
       setMarkers([...markers, { lat, lng, country, type }]);
+
+      if (type === 'Route') {
+        const address = modalData.address;
+        setRouteMarkers([...routeMarkers, { lat, lng, address }]);
+      }
     } catch (error) {
       console.error('Failed to fetch country name:', error);
       setMarkers([...markers, { lat, lng, country: 'Unknown', type }]);
     }
 
     setModalData({ ...modalData, isOpen: false });
+  };
+
+  // Fetch route between markers
+  const fetchRoute = async () => {
+    if (routeMarkers.length < 2) {
+      alert('Please add at least two markers to calculate a route.');
+      return;
+    }
+
+    const coordinates = routeMarkers
+      .map((marker) => `${marker.lng},${marker.lat}`)
+      .join(';');
+
+    try {
+      const response = await axios.get(
+        `https://router.project-osrm.org/route/v1/driving/${coordinates}`,
+        { params: { overview: 'full', geometries: 'polyline' } }
+      );
+
+      const routeData = response.data.routes[0];
+      if (routeData) {
+        const decodedRoute = polyline.decode(routeData.geometry);
+        setRoute(decodedRoute.map(([lat, lng]) => [lat, lng]));
+
+        const times = routeData.legs.map((leg: { duration: number }) => {
+          const minutes = Math.round(leg.duration / 60);
+          return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+        });
+
+        const filledTimes = Array(routeMarkers.length - 1)
+          .fill(null)
+          .map((_, index) => times[index] || 'N/A');
+        setTravelTimes(filledTimes);
+      } else {
+        console.error('No route found.');
+      }
+    } catch (error) {
+      console.error('Failed to fetch route:', error);
+    }
+  };
+
+  // Drag and drop marked places
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const reorderedMarkers = Array.from(routeMarkers);
+    const [removed] = reorderedMarkers.splice(result.source.index, 1);
+    reorderedMarkers.splice(result.destination.index, 0, removed);
+
+    setRouteMarkers(reorderedMarkers);
+    fetchRoute();
+  };
+
+  // Clear the route
+  const clearRoute = () => {
+    setRoute([]);
+    setTravelTimes([]);
   };
 
   // Handle search for city
@@ -132,6 +214,10 @@ const MapComponent: React.FC = () => {
   const handleDeleteMarker = (lat: number, lng: number) => {
     setMarkers(
       markers.filter((marker) => marker.lat !== lat || marker.lng !== lng)
+    );
+
+    setRouteMarkers(
+      routeMarkers.filter((marker) => marker.lat !== lat || marker.lng !== lng)
     );
   };
 
@@ -202,6 +288,7 @@ const MapComponent: React.FC = () => {
               </Popup>
             </Marker>
           ))}
+          {route.length > 0 && <Polyline positions={route} color="blue" />}
         </MapContainer>
       </div>
 
@@ -226,6 +313,134 @@ const MapComponent: React.FC = () => {
               Cancel
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Lower buttons */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          backgroundColor: 'black',
+        }}
+      >
+        <button
+          onClick={fetchRoute}
+          style={{
+            flex: 1,
+            margin: '10px 5px',
+            padding: '10px 15px',
+            backgroundColor: 'grey',
+            color: 'white',
+            border: '1px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Calculate Route
+        </button>
+
+        <button
+          onClick={clearRoute}
+          style={{
+            flex: 1,
+            margin: '10px 5px',
+            padding: '10px 15px',
+            backgroundColor: 'grey',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Clear Route
+        </button>
+
+        <button
+          onClick={() => setIsRouteDialogOpen(true)}
+          style={{
+            flex: 1,
+            margin: '10px 5px',
+            padding: '10px 15px',
+            backgroundColor: 'grey',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Show Route Details
+        </button>
+      </div>
+
+      {/* Route dialog */}
+      {isRouteDialogOpen && (
+        <div className="modal">
+          <h2>Your Road Trip!</h2>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="routeMarkers">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="droppable-container"
+                >
+                  {routeMarkers.map(
+                    (marker, index) =>
+                      index < routeMarkers.length - 1 && (
+                        <Draggable
+                          key={index}
+                          draggableId={`marker-${index}`}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="draggable-item"
+                              style={{
+                                ...provided.draggableProps.style,
+                                border: '1px solid #ccc',
+                                marginBottom: '10px',
+                                padding: '10px',
+                                backgroundColor: '#fff',
+                                cursor: 'move',
+                                borderRadius: '5px',
+                              }}
+                            >
+                              <p
+                                style={{
+                                  textAlign: 'center',
+                                  fontWeight: 'bold',
+                                }}
+                              >
+                                Route {index + 1}
+                              </p>
+                              <p>
+                                <b>A: </b>
+                                {marker.address}
+                              </p>
+                              <p>
+                                <b>B: </b>
+                                {routeMarkers[index + 1]?.address}
+                              </p>
+                              <p>
+                                <b>Time: </b>
+                                {travelTimes[index]}
+                              </p>
+                            </div>
+                          )}
+                        </Draggable>
+                      )
+                  )}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+          <button onClick={() => setIsRouteDialogOpen(false)}>Close</button>
         </div>
       )}
     </div>
