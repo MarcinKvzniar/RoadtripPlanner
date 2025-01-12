@@ -13,7 +13,13 @@ import axios from 'axios';
 import './MapComponent.css';
 import AppBar from '../app-bar/AppBar';
 import polyline from '@mapbox/polyline';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faRoute,
+  faTrashAlt,
+  faInfoCircle,
+  faMapMarkedAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -30,19 +36,35 @@ const getFlagIcon = (country: string) => {
 
 const MapComponent: React.FC = () => {
   const [markers, setMarkers] = useState<
-    { lat: number; lng: number; country: string; type: string }[]
+    {
+      id: string;
+      lat: number;
+      lon: number;
+      address: string;
+      country: string;
+      type: string;
+      visited: boolean;
+    }[]
   >([]);
   const [modalData, setModalData] = useState<{
     lat: number;
-    lng: number;
+    lon: number;
     address: string;
     country: string;
     isOpen: boolean;
-  }>({ lat: 0, lng: 0, address: '', country: 'unknown', isOpen: false });
+  }>({ lat: 0, lon: 0, address: '', country: 'unknown', isOpen: false });
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<L.Map>(null);
   const [routeMarkers, setRouteMarkers] = useState<
-    { lat: number; lng: number; address: string }[]
+    {
+      id: string;
+      lat: number;
+      lon: number;
+      address: string;
+      country: string;
+      type: string;
+      visited: boolean;
+    }[]
   >([]);
   const [route, setRoute] = useState<[number, number][]>([]);
   const [travelTimes, setTravelTimes] = useState<string[]>([]);
@@ -51,7 +73,7 @@ const MapComponent: React.FC = () => {
   // Handle click on the map to show the modal
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
     const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
+    const lon = e.latlng.lng;
 
     try {
       const response = await axios.get(
@@ -59,7 +81,7 @@ const MapComponent: React.FC = () => {
         {
           params: {
             lat,
-            lon: lng,
+            lon,
             format: 'json',
             'accept-language': 'en',
           },
@@ -79,7 +101,7 @@ const MapComponent: React.FC = () => {
 
       setModalData({
         lat,
-        lng,
+        lon,
         address: `${street}, ${city}, ${address.country}`,
         country,
         isOpen: true,
@@ -88,7 +110,7 @@ const MapComponent: React.FC = () => {
       console.error('Failed to fetch address:', error);
       setModalData({
         lat,
-        lng,
+        lon,
         address: 'Unable to retrieve address',
         country: 'unknown',
         isOpen: true,
@@ -98,32 +120,65 @@ const MapComponent: React.FC = () => {
 
   // Add a marker based on the modal action
   const handleAddMarker = async (type: string) => {
-    const { lat, lng } = modalData;
+    const { lat, lon, address } = modalData;
 
     try {
       const response = await axios.get(
         'https://nominatim.openstreetmap.org/reverse',
         {
-          params: { lat, lon: lng, format: 'json', 'accept-language': 'en' },
+          params: { lat, lon, format: 'json', 'accept-language': 'en' },
         }
       );
       let country = response.data.address.country || 'Unknown';
       country = country.toLowerCase().replace(/\s+/g, '-');
-      if (country === 'south-ossetia' || country === 'abkhazia')
-        country = 'georgia'; /*/ Free Georgia, wtf is this api */
-      if (country === 'northern-cyprus')
-        country = 'cyprus'; /*/ there is no such a country lol /*/
-      if (country === 'unknown') country = 'default'; /*/ default flag /*/
+      if (['south-ossetia', 'abkhazia'].includes(country)) country = 'georgia'; // wtf is this api, free georgia
+      if (country === 'northern-cyprus') country = 'cyprus'; // lol not a country
+      if (country === 'unknown') country = 'default';
 
-      setMarkers([...markers, { lat, lng, country, type }]);
+      const visited = type === 'Visited';
+      const visitedId = (
+        markers.filter((marker) => marker.type === 'Visited').length + 1
+      ).toString();
+      const routeId = (
+        markers.filter((marker) => marker.type === 'Route').length + 1
+      ).toString();
+      const id = type === 'Visited' ? visitedId : routeId;
+      const visitedMarker = { id, lat, lon, address, country, type, visited };
+
+      setMarkers([...markers, visitedMarker]);
 
       if (type === 'Route') {
-        const address = modalData.address;
-        setRouteMarkers([...routeMarkers, { lat, lng, address }]);
+        setRouteMarkers([
+          ...routeMarkers,
+          {
+            id: routeId,
+            lat,
+            lon,
+            address: 'Unknown',
+            country: 'default',
+            type,
+            visited: false,
+          },
+        ]);
+      } else if (type === 'Visited') {
+        await saveVisitedMarker(visitedMarker);
       }
+
+      console.log(`${type} marker:`, visitedMarker);
     } catch (error) {
       console.error('Failed to fetch country name:', error);
-      setMarkers([...markers, { lat, lng, country: 'Unknown', type }]);
+      setMarkers([
+        ...markers,
+        {
+          id: (markers.length + 1).toString(),
+          lat,
+          lon,
+          address: 'Unknown',
+          country: 'default',
+          type,
+          visited: false,
+        },
+      ]);
     }
 
     setModalData({ ...modalData, isOpen: false });
@@ -137,7 +192,7 @@ const MapComponent: React.FC = () => {
     }
 
     const coordinates = routeMarkers
-      .map((marker) => `${marker.lng},${marker.lat}`)
+      .map((marker) => `${marker.lon},${marker.lat}`)
       .join(';');
 
     try {
@@ -166,18 +221,6 @@ const MapComponent: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch route:', error);
     }
-  };
-
-  // Drag and drop marked places
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
-
-    const reorderedMarkers = Array.from(routeMarkers);
-    const [removed] = reorderedMarkers.splice(result.source.index, 1);
-    reorderedMarkers.splice(result.destination.index, 0, removed);
-
-    setRouteMarkers(reorderedMarkers);
-    fetchRoute();
   };
 
   // Clear the route
@@ -213,19 +256,59 @@ const MapComponent: React.FC = () => {
   // Handle deleting marker
   const handleDeleteMarker = (lat: number, lng: number) => {
     setMarkers(
-      markers.filter((marker) => marker.lat !== lat || marker.lng !== lng)
+      markers.filter((marker) => marker.lat !== lat || marker.lon !== lng)
     );
 
     setRouteMarkers(
-      routeMarkers.filter((marker) => marker.lat !== lat || marker.lng !== lng)
+      routeMarkers.filter((marker) => marker.lat !== lat || marker.lon !== lng)
     );
   };
 
   // Handle saving visited places
-  const saveMarkedPlaces = () => console.log('Save Marked Places'); /* TODO */
+  const saveVisitedMarker = async (marker: {
+    id: string;
+    lat: number;
+    lon: number;
+    address: string;
+    country: string;
+    visited: boolean;
+  }) => {
+    try {
+      await axios.post('/eoeoeoeo', { ...marker, type: 'Visited' }); // ADJUST THE API URL
+      console.log('Visited marker saved:', marker);
+    } catch (error) {
+      console.error('Error saving visited marker:', error);
+    }
+  };
 
-  // Handle saving road trip
-  const saveRoadTrip = () => console.log('Save Road Trip'); /* TODO */
+  // Handle saving route
+  const saveRoute = async (
+    markers: {
+      id: string;
+      lat: number;
+      lon: number;
+      address: string;
+      country: string;
+      type: string;
+      visited: boolean;
+    }[]
+  ) => {
+    try {
+      await axios.post('/eooeoeoeoeoeo', { routeMarkers: markers });
+      console.log('Route saved:', markers);
+    } catch (error) {
+      console.error('Error saving route:', error);
+    }
+  };
+
+  // Save road trip on button click
+  const saveRoadTrip = async () => {
+    if (routeMarkers.length === 0) {
+      alert('No route markers to save!');
+      return;
+    }
+    await saveRoute(routeMarkers);
+  };
 
   return (
     <div className="map-page">
@@ -234,8 +317,6 @@ const MapComponent: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleSearch={handleSearch}
-        saveMarkedPlaces={saveMarkedPlaces} /* TODO */
-        saveRoadTrip={saveRoadTrip} /* TODO */
       />
 
       <div className="map-container">
@@ -256,7 +337,7 @@ const MapComponent: React.FC = () => {
           {markers.map((marker, idx) => (
             <Marker
               key={`marker-${idx}`}
-              position={[marker.lat, marker.lng]}
+              position={[marker.lat, marker.lon]}
               icon={getFlagIcon(marker.country)}
             >
               <Popup>
@@ -266,13 +347,13 @@ const MapComponent: React.FC = () => {
                   </p>
                   <p>
                     <strong>Coordinates:</strong> {marker.lat.toFixed(4)},{' '}
-                    {marker.lng.toFixed(4)}
+                    {marker.lon.toFixed(4)}
                   </p>
                   <p>
                     <strong>Type:</strong> {marker.type}
                   </p>
                   <button
-                    onClick={() => handleDeleteMarker(marker.lat, marker.lng)}
+                    onClick={() => handleDeleteMarker(marker.lat, marker.lon)}
                     style={{
                       backgroundColor: '#f44336',
                       color: 'white',
@@ -297,7 +378,7 @@ const MapComponent: React.FC = () => {
           <h2>Add Marker</h2>
           <p>
             <strong>Coordinates:</strong> {modalData.lat.toFixed(4)},{' '}
-            {modalData.lng.toFixed(4)}
+            {modalData.lon.toFixed(4)}
           </p>
           <p>
             <strong>Address:</strong> {modalData.address}
@@ -338,6 +419,10 @@ const MapComponent: React.FC = () => {
             cursor: 'pointer',
           }}
         >
+          <FontAwesomeIcon
+            icon={faMapMarkedAlt}
+            style={{ marginRight: '5px' }}
+          />
           Calculate Route
         </button>
 
@@ -354,6 +439,7 @@ const MapComponent: React.FC = () => {
             cursor: 'pointer',
           }}
         >
+          <FontAwesomeIcon icon={faTrashAlt} style={{ marginRight: '5px' }} />
           Clear Route
         </button>
 
@@ -370,7 +456,24 @@ const MapComponent: React.FC = () => {
             cursor: 'pointer',
           }}
         >
+          <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: '5px' }} />
           Show Route Details
+        </button>
+        <button
+          onClick={saveRoadTrip}
+          style={{
+            flex: 1,
+            margin: '10px 5px',
+            padding: '10px 15px',
+            backgroundColor: 'grey',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          <FontAwesomeIcon icon={faRoute} style={{ marginRight: '5px' }} />
+          Save Road Trip
         </button>
       </div>
 
@@ -378,68 +481,45 @@ const MapComponent: React.FC = () => {
       {isRouteDialogOpen && (
         <div className="modal">
           <h2>Your Road Trip!</h2>
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="routeMarkers">
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="droppable-container"
-                >
-                  {routeMarkers.map(
-                    (marker, index) =>
-                      index < routeMarkers.length - 1 && (
-                        <Draggable
-                          key={index}
-                          draggableId={`marker-${index}`}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="draggable-item"
-                              style={{
-                                ...provided.draggableProps.style,
-                                border: '1px solid #ccc',
-                                marginBottom: '10px',
-                                padding: '10px',
-                                backgroundColor: '#fff',
-                                cursor: 'move',
-                                borderRadius: '5px',
-                              }}
-                            >
-                              <p
-                                style={{
-                                  textAlign: 'center',
-                                  fontWeight: 'bold',
-                                }}
-                              >
-                                Route {index + 1}
-                              </p>
-                              <p>
-                                <b>A: </b>
-                                {marker.address}
-                              </p>
-                              <p>
-                                <b>B: </b>
-                                {routeMarkers[index + 1]?.address}
-                              </p>
-                              <p>
-                                <b>Time: </b>
-                                {travelTimes[index]}
-                              </p>
-                            </div>
-                          )}
-                        </Draggable>
-                      )
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <div className="droppable-container">
+            {routeMarkers.map(
+              (marker, index) =>
+                index < routeMarkers.length - 1 && (
+                  <div
+                    key={index}
+                    className="draggable-item"
+                    style={{
+                      border: '1px solid #ccc',
+                      marginBottom: '10px',
+                      padding: '10px',
+                      backgroundColor: '#fff',
+                      borderRadius: '5px',
+                    }}
+                  >
+                    <p
+                      style={{
+                        textAlign: 'center',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      Route {index + 1}
+                    </p>
+                    <p>
+                      <b>A: </b>
+                      {marker.address}
+                    </p>
+                    <p>
+                      <b>B: </b>
+                      {routeMarkers[index + 1]?.address}
+                    </p>
+                    <p>
+                      <b>Time: </b>
+                      {travelTimes[index]}
+                    </p>
+                  </div>
+                )
+            )}
+          </div>
           <button onClick={() => setIsRouteDialogOpen(false)}>Close</button>
         </div>
       )}
