@@ -188,7 +188,7 @@ async def register_new_user(register_request: RegisterRequest):
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
-@user_router.get("/users/{user_id}", response_model=UserResponse)
+@user_router.get("/read_user/{user_id}", response_model=UserResponse)
 async def read_user_by_id(user_id):
     """
         Get specific user by his id as param in url
@@ -209,7 +209,7 @@ async def read_user_by_id(user_id):
 
 
 
-@user_router.post("/refresh", response_model=Token)
+@user_router.post("/refresh_token", response_model=Token)
 async def refresh_access_token(refresh_request: RefreshRequest = Body(...)):
     """
         Refresh users access token based on his refresh token
@@ -282,7 +282,7 @@ def extract_user_id_from_token(token: str) -> str:
         )
 
 
-@user_router.post("/get_me", response_model=UserResponse)
+@user_router.post("/my_user", response_model=UserResponse)
 async def extract_user_info(token_request: TokenRequest = Body(...)):
     """
         Get current user information based on jwt token
@@ -304,7 +304,7 @@ async def extract_user_info(token_request: TokenRequest = Body(...)):
     return user
 
 
-@user_router.get("/users", response_model=List[UserResponse])
+@user_router.get("/all_users", response_model=List[UserResponse])
 async def get_all_users():
     """
         Get current all users information ONLY FOR ADMINS

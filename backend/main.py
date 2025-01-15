@@ -20,11 +20,7 @@ from regulations_router import regulations_router
 from destinations_routes_router import destinations_routes_router
 
 load_dotenv()
-
-
-
-# API setup
-app = FastAPI()
+app = FastAPI(root_path="/api/v1")
 
 # Include routers
 app.include_router(user_router, prefix="/users", tags=["users"])
@@ -46,4 +42,3 @@ async def healthcheck():
         identification/ healthcheck endpoint
     """
     return {"RoadTripPlan": "ONLINE"}
-
