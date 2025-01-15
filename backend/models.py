@@ -2,25 +2,23 @@
 original author: Dominik Cedro
 created: 2024-11-27
 license: none
-description: Models for user objects in DB, they also perform DTO role
+description: Models represent documents in MongoDB
 """
+
+from pydantic import BaseModel, Field, field_validator, EmailStr
 from typing import Optional
 from bson import ObjectId
-from pydantic import BaseModel, Field, field_validator, EmailStr
 
-class DestinationModel(BaseModel):
-    name: str
+class BaseDestinationModel(BaseModel):
+    """
+    base model for destinations and routes
+    """
+    id: Optional[str] = Field(None, alias="_id")
     lat: float
     lon: float
     address: str
     country: str
-    visited: bool
-
-    @field_validator('name')
-    def name_must_be_unique(cls, v, values, **kwargs):
-        if not v:
-            raise ValueError('Name must not be empty')
-        return v
+    type: str
 
     @field_validator('lat', 'lon')
     def lat_lon_must_be_non_negative(cls, v, field):
@@ -34,6 +32,25 @@ class DestinationModel(BaseModel):
             raise ValueError('Address must not be None')
         return v
 
+    @field_validator('type')
+    def type_must_be_valid(cls, v):
+        if v not in ["visited", "route"]:
+            raise ValueError('Type must be either "visited" or "route"')
+        return v
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str
+        }
+
+class DestinationModel(BaseDestinationModel):
+    """destinations - places marked as visited or not"""
+    visited: bool
+
+class RouteModel(BaseDestinationModel):
+    """ route objects, they will store roadtrips as lists of route objects"""
+    pass
 
 class Token(BaseModel):
     access_token: str

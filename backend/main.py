@@ -24,7 +24,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 # module imports
 from models import User, UserCreate, UserInDB, Token, TokenData, LoginRequest, RegisterRequest, UserResponse, \
-    RefreshRequest, TokenRequest, DestinationModel
+    RefreshRequest, TokenRequest, DestinationModel, BaseDestinationModel, RouteModel
 from security import get_password_hash, verify_password, oauth2_scheme, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, REFRESH_TOKEN_EXPIRE_MINUTES, create_refresh_token
 
@@ -356,12 +356,12 @@ async def healthcheck():
     return {"RoadTripPlan": "ONLINE"}
 
 @app.post("/save_destination", response_model=UserResponse)
-async def save_destination(destination: DestinationModel, authorization: str = Header(...)):
+async def save_destination(destination: BaseDestinationModel, authorization: str = Header(...)):
     """
         Save destination information to user's destinations field
 
         Args:
-            destination (DestinationModel): destination information
+            destination (BaseDestinationModel): destination information
             authorization (str): Bearer token from authorization header
 
         Returns:
@@ -377,16 +377,17 @@ async def save_destination(destination: DestinationModel, authorization: str = H
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if any(dest.name == destination.name for dest in user.destinations):
-        raise HTTPException(status_code=400, detail="Destination name must be unique")
+    if isinstance(destination, DestinationModel):
+        user.destinations.append(destination)
+    elif isinstance(destination, RouteModel):
+        user.destinations.append(destination)
 
-    user.destinations.append(destination)
     collection_users.update_one({"_id": ObjectId(user_id)}, {"$set": {"destinations": [dest.dict() for dest in user.destinations]}})
 
     return UserResponse(**user.dict())
 
 
-@app.get("/get_destinations", response_model=List[DestinationModel])
+@app.get("/get_destinations", response_model=List[BaseDestinationModel])
 async def retrieve_destination_multiple(authorization: str = Header(...)):
     """
     Get all destinations for the current user (JWT)
@@ -398,3 +399,39 @@ async def retrieve_destination_multiple(authorization: str = Header(...)):
         raise HTTPException(status_code=404, detail="User not found")
 
     return user.destinations
+
+
+@app.put("/update_destination", response_model=UserResponse)
+async def update_destination(destination: BaseDestinationModel, authorization: str = Header(...)):
+    """
+        Update destination information in user's destinations field
+
+        Args:
+            destination (BaseDestinationModel): updated destination information
+            authorization (str): Bearer token from authorization header
+
+        Returns:
+            user (UserResponse): updated user information
+
+        Raises:
+            HTTP Exception 401 if token is invalid or user not found.
+            HTTP Exception 404 if destination not found.
+     """
+    token = authorization.split(" ")[1]
+    user_id = extract_user_id_from_token(token)
+    user = get_user_by_id(collection_users, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    destination_id = ObjectId(destination.id)
+    for i, dest in enumerate(user.destinations):
+        if dest.id == str(destination_id):
+            user.destinations[i] = destination
+            break
+    else:
+        raise HTTPException(status_code=404, detail="Destination not found")
+
+    collection_users.update_one({"_id": ObjectId(user_id)}, {"$set": {"destinations": [dest.dict() for dest in user.destinations]}})
+
+    return UserResponse(**user.dict())
+
