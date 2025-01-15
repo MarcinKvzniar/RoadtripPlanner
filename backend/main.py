@@ -18,13 +18,13 @@ from dotenv import load_dotenv
 from bson import ObjectId
 from fastapi import Body, HTTPException, status
 from jwt.exceptions import InvalidTokenError
-from datetime import timedelta
+from datetime import timedelta, datetime
 from fastapi import Request
 from starlette.middleware.cors import CORSMiddleware
 
 # module imports
 from models import User, UserCreate, UserInDB, Token, TokenData, LoginRequest, RegisterRequest, UserResponse, \
-    RefreshRequest, TokenRequest, DestinationModel, BaseDestinationModel, RouteModel
+    RefreshRequest, TokenRequest, DestinationModel, BaseDestinationModel, RouteModel, RoadRegulation, RoutePlan
 from security import get_password_hash, verify_password, oauth2_scheme, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, REFRESH_TOKEN_EXPIRE_MINUTES, create_refresh_token
 
@@ -36,6 +36,8 @@ client = MongoClient(uri)
 db = client.hackyeahdb
 collection_users = db["users"]
 collection_counters = db["counters"]
+collection_road_regulations = db['regulations']
+collection_route_plans = db['route_plans']
 
 # API setup
 app = FastAPI()
@@ -435,3 +437,72 @@ async def update_destination(destination: BaseDestinationModel, authorization: s
 
     return UserResponse(**user.dict())
 
+# roadtrip
+
+@app.post("/add_road_regulation", response_model=RoadRegulation)
+async def add_road_regulation(road_regulation: RoadRegulation):
+    """
+    Add a new road regulation document to the database.
+    """
+    existing_regulation = collection_road_regulations.find_one({"country_name": road_regulation.country_name})
+    if existing_regulation:
+        raise HTTPException(status_code=409, detail="Road regulation for this country already exists")
+
+    result = collection_road_regulations.insert_one(road_regulation.dict())
+    if result.inserted_id:
+        return road_regulation
+    else:
+        raise HTTPException(status_code=500, detail="Failed to insert road regulation")
+
+
+@app.get("/road_regulations", response_model=List[RoadRegulation])
+async def get_all_road_regulations():
+    """
+    Retrieve all road regulations from the database.
+    """
+    regulations = list(collection_road_regulations.find({}))
+    return [RoadRegulation(**regulation) for regulation in regulations]
+
+
+@app.get("/road_regulations/{country_name}", response_model=RoadRegulation)
+async def get_road_regulation_by_country(country_name: str):
+    """
+    Retrieve a specific road regulation based on the country name.
+    """
+    regulation = collection_road_regulations.find_one({"country_name": country_name})
+    if not regulation:
+        raise HTTPException(status_code=404, detail="Road regulation for this country not found")
+    return RoadRegulation(**regulation)
+
+# route plans
+
+@app.post("/create_route_plan", response_model=RoutePlan)
+async def create_route_plan(route_plan: RoutePlan, authorization: str = Header(...)):
+    """
+    Create a new route plan for a specific user.
+
+    Args:
+        route_plan (RoutePlan): The route plan data.
+        authorization (str): Bearer token from authorization header.
+
+    Returns:
+        RoutePlan: The inserted route plan document.
+
+    Raises:
+        HTTPException 401: If the user is not authenticated.
+        HTTPException 500: If the insertion fails.
+    """
+    token = authorization.split(" ")[1]
+    user_id = extract_user_id_from_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token or user not authenticated")
+
+    route_plan_data = route_plan.dict()
+    route_plan_data["creator_id"] = user_id
+    route_plan_data["date_created"] = datetime.utcnow()
+
+    result = collection_route_plans.insert_one(route_plan_data)
+    if result.inserted_id:
+        return RoutePlan(**route_plan_data)
+    else:
+        raise HTTPException(status_code=500, detail="Failed to create route plan")

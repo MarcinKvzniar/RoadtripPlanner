@@ -4,10 +4,13 @@ created: 2024-11-27
 license: none
 description: Models represent documents in MongoDB
 """
+from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, EmailStr
-from typing import Optional
+from typing import Optional, List
 from bson import ObjectId
+from typing import Dict
+
 
 class BaseDestinationModel(BaseModel):
     """
@@ -121,3 +124,48 @@ class TokenRequest(BaseModel):
     access_token: str
 
 
+# Road Regulations
+
+
+class SpeedLimits(BaseModel):
+    city: int
+    highway: int
+    school_zone: int
+
+class MandatoryItems(BaseModel):
+    first_aid_kit: bool
+    warning_triangle: bool
+    reflective_vests: bool
+    spare_tire: bool
+
+class AcceptedDriverIDs(BaseModel):
+    vienna: bool
+    geneva: bool
+    eu: bool
+    american: bool
+
+class OtherRules(BaseModel):
+    mandatory_items: MandatoryItems
+    seatbelt_mandatory: bool
+    alcohol_limit: float
+    driving_age_limit: int
+    accepted_driver_ids: AcceptedDriverIDs
+
+class Fees(BaseModel):
+    highway: bool
+    toll_price: int
+
+class RoadRegulation(BaseModel):
+    country_name: str
+    speed_limits: Dict[str, SpeedLimits]
+    other_rules: OtherRules
+    fees: Fees
+
+
+# Route plan
+
+class RoutePlan(BaseModel):
+    name: str
+    route: List[RouteModel]
+    date_created: datetime
+    creator_id: str
