@@ -154,8 +154,8 @@ const MapComponent: React.FC = () => {
             id: routeId,
             lat,
             lon,
-            address: 'Unknown',
-            country: 'default',
+            address,
+            country,
             type,
             visited: false,
           },
@@ -215,6 +215,7 @@ const MapComponent: React.FC = () => {
           .fill(null)
           .map((_, index) => times[index] || 'N/A');
         setTravelTimes(filledTimes);
+        console.log(routeMarkers);
       } else {
         console.error('No route found.');
       }
