@@ -506,3 +506,26 @@ async def create_route_plan(route_plan: RoutePlan, authorization: str = Header(.
         return RoutePlan(**route_plan_data)
     else:
         raise HTTPException(status_code=500, detail="Failed to create route plan")
+
+
+@app.get("/get_my_route_plans", response_model=List[RoutePlan])
+async def get_my_route_plans(authorization: str = Header(...)):
+    """
+    Retrieve all route plans for the authenticated user.
+
+    Args:
+        authorization (str): Bearer token from authorization header.
+
+    Returns:
+        List[RoutePlan]: A list of route plans created by the user.
+
+    Raises:
+        HTTPException 401: If the user is not authenticated.
+    """
+    token = authorization.split(" ")[1]
+    user_id = extract_user_id_from_token(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token or user not authenticated")
+
+    route_plans = list(collection_route_plans.find({"creator_id": user_id}))
+    return [RoutePlan(**route_plan) for route_plan in route_plans]
