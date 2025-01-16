@@ -7,8 +7,6 @@ import {
   faCar,
   faSearch,
   faGlobe,
-  faBookmark,
-  faRoute,
 } from '@fortawesome/free-solid-svg-icons';
 import './AppBar.css';
 
@@ -17,8 +15,6 @@ interface AppBarProps {
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   handleSearch: (e: React.FormEvent) => void;
   searchQuery: string;
-  saveMarkedPlaces: () => void;
-  saveRoadTrip: () => void;
 }
 
 const AppBar: React.FC<AppBarProps> = ({
@@ -26,8 +22,6 @@ const AppBar: React.FC<AppBarProps> = ({
   setSearchQuery,
   handleSearch,
   searchQuery,
-  saveMarkedPlaces,
-  saveRoadTrip,
 }) => {
   const navigate = useNavigate();
 
@@ -66,20 +60,6 @@ const AppBar: React.FC<AppBarProps> = ({
 
         {/* Icons aligned to the right */}
         <div className="app-bar-icons">
-          <button
-            className="app-bar-button"
-            onClick={saveMarkedPlaces}
-            title="Save Marked Places"
-          >
-            <FontAwesomeIcon icon={faBookmark} />
-          </button>
-          <button
-            className="app-bar-button"
-            onClick={saveRoadTrip}
-            title="Save Visited Trip"
-          >
-            <FontAwesomeIcon icon={faRoute} />
-          </button>
           <button
             className="app-bar-button"
             onClick={() => navigate('/visited-places')}
