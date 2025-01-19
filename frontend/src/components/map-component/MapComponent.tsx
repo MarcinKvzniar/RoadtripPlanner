@@ -20,6 +20,7 @@ import {
   faInfoCircle,
   faMapMarkedAlt,
 } from '@fortawesome/free-solid-svg-icons';
+import { saveVisitedPlace, fetchStreetRules } from '../../services/api';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -106,6 +107,7 @@ const MapComponent: React.FC = () => {
         country,
         isOpen: true,
       });
+      console.log('Fetched rules: ', fetchRules(country));
     } catch (error) {
       console.error('Failed to fetch address:', error);
       setModalData({
@@ -135,15 +137,22 @@ const MapComponent: React.FC = () => {
       if (country === 'northern-cyprus') country = 'cyprus'; // lol not a country
       if (country === 'unknown') country = 'default';
 
-      const visited = type === 'Visited';
       const visitedId = (
-        markers.filter((marker) => marker.type === 'Visited').length + 1
+        markers.filter((marker) => marker.type === 'visited').length + 1
       ).toString();
       const routeId = (
-        markers.filter((marker) => marker.type === 'Route').length + 1
+        markers.filter((marker) => marker.type === 'route').length + 1
       ).toString();
-      const id = type === 'Visited' ? visitedId : routeId;
-      const visitedMarker = { id, lat, lon, address, country, type, visited };
+      const id = type === 'visited' ? visitedId : routeId;
+      const visitedMarker = {
+        id,
+        lat,
+        lon,
+        address,
+        country,
+        type,
+        visited: true,
+      };
 
       setMarkers([...markers, visitedMarker]);
 
@@ -160,7 +169,7 @@ const MapComponent: React.FC = () => {
             visited: false,
           },
         ]);
-      } else if (type === 'Visited') {
+      } else if (type === 'visited') {
         await saveVisitedMarker(visitedMarker);
       }
 
@@ -176,7 +185,7 @@ const MapComponent: React.FC = () => {
           address: 'Unknown',
           country: 'default',
           type,
-          visited: false,
+          visited: true,
         },
       ]);
     }
@@ -272,13 +281,14 @@ const MapComponent: React.FC = () => {
     lon: number;
     address: string;
     country: string;
+    type: string;
     visited: boolean;
   }) => {
     try {
-      await axios.post('/eoeoeoeo', { ...marker, type: 'Visited' }); // ADJUST THE API URL
-      console.log('Visited marker saved:', marker);
+      const response = await saveVisitedPlace(marker);
+      console.log('Visited place saved:', response);
     } catch (error) {
-      console.error('Error saving visited marker:', error);
+      console.error('Error saving visited place:', error);
     }
   };
 
@@ -291,11 +301,10 @@ const MapComponent: React.FC = () => {
       address: string;
       country: string;
       type: string;
-      visited: boolean;
     }[]
   ) => {
     try {
-      await axios.post('/eooeoeoeoeoeo', { routeMarkers: markers });
+      await axios.post('', { routeMarkers: markers });
       console.log('Route saved:', markers);
     } catch (error) {
       console.error('Error saving route:', error);
@@ -309,6 +318,16 @@ const MapComponent: React.FC = () => {
       return;
     }
     await saveRoute(routeMarkers);
+  };
+
+  // Fetch street rules for a country
+  const fetchRules = async (country: string) => {
+    try {
+      const response = await fetchStreetRules(country);
+      console.log('Street rules fetched:', response);
+    } catch (error) {
+      console.error('Error fetching street rules:', error);
+    }
   };
 
   return (
@@ -385,8 +404,8 @@ const MapComponent: React.FC = () => {
             <strong>Address:</strong> {modalData.address}
           </p>
           <div className="modal-buttons">
-            <button onClick={() => handleAddMarker('Visited')}>Visited</button>
-            <button onClick={() => handleAddMarker('Route')}>
+            <button onClick={() => handleAddMarker('visited')}>Visited</button>
+            <button onClick={() => handleAddMarker('route')}>
               Add to Route
             </button>
             <button
