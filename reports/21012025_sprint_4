@@ -1,0 +1,15 @@
+# Sprint 3 Report
+
+### Accomplished
+* Backend: introduced regulations, route and destination endpoints (for planning routes, visited places, showing road regulations en rout)
+* Frontend: integration with backend
+
+### Challenges
+* how to show road regulations on map
+* how to store regulations
+
+### Tasks for the next sprint
+* Final touches to application
+* Other steps
+
+#### 21.01.2025 Marcin Kuzniar & Dominik Cedro - sprint 4 (10.01.2025-21.01.2025)
