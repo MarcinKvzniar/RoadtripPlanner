@@ -46,7 +46,7 @@ export const fetchUserPlaces = async () => {
 };
 
 export const saveVisitedPlace = async (marker: {
-  id?: string;
+  id: string;
   lat: number;
   lon: number;
   address: string;

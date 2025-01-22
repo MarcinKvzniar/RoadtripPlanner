@@ -107,7 +107,7 @@ const MapComponent: React.FC = () => {
         country,
         isOpen: true,
       });
-      console.log('Fetched rules: ', fetchRules(country));
+      // console.log('Fetched rules: ', fetchRules(country));
     } catch (error) {
       console.error('Failed to fetch address:', error);
       setModalData({

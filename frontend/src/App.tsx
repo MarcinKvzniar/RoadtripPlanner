@@ -7,6 +7,7 @@ import NotFoundPage from './components/not-found/NotFoundPage';
 import MapComponent from './components/map-component/MapComponent';
 import PrivateRoute from './private-route/PrivateRoute';
 import './App.css';
+import VisitedMap from './components/visited-map/VisitedMap';
 
 const App: React.FC = () => {
   return (
@@ -27,11 +28,11 @@ const App: React.FC = () => {
             element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
           />
           <Route
-            path="/visited-places"
-            element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
+            path="/visited_places"
+            element={<PrivateRoute element={<VisitedMap />} />}
           />
           <Route
-            path="/road-trips"
+            path="/road_trips"
             element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
           />
 

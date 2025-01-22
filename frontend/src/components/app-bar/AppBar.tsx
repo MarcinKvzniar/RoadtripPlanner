@@ -62,14 +62,14 @@ const AppBar: React.FC<AppBarProps> = ({
         <div className="app-bar-icons">
           <button
             className="app-bar-button"
-            onClick={() => navigate('/visited-places')}
+            onClick={() => navigate('/visited_places')}
             title="Visited Places"
           >
             <FontAwesomeIcon icon={faMap} />
           </button>
           <button
             className="app-bar-button"
-            onClick={() => navigate('/road-trips')}
+            onClick={() => navigate('/road_trips')}
             title="Road Trip Plans"
           >
             <FontAwesomeIcon icon={faCar} />
