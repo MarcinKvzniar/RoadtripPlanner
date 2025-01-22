@@ -11,10 +11,11 @@ import {
 import './AppBar.css';
 
 interface AppBarProps {
-  mapRef: React.RefObject<L.Map>;
-  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
-  handleSearch: (e: React.FormEvent) => void;
-  searchQuery: string;
+  mapRef?: React.RefObject<L.Map>;
+  setSearchQuery?: React.Dispatch<React.SetStateAction<string>>;
+  handleSearch?: (e: React.FormEvent) => void;
+  searchQuery?: string;
+  showSearchBar?: boolean;
 }
 
 const AppBar: React.FC<AppBarProps> = ({
@@ -22,6 +23,7 @@ const AppBar: React.FC<AppBarProps> = ({
   setSearchQuery,
   handleSearch,
   searchQuery,
+  showSearchBar = true,
 }) => {
   const navigate = useNavigate();
 
@@ -33,8 +35,8 @@ const AppBar: React.FC<AppBarProps> = ({
         <div className="app-bar-logo">
           <button
             className="logo-icon"
-            onClick={() => mapRef.current?.flyTo([51.11, 17.04], 5)}
-            title="Center the Map"
+            onClick={() => navigate('/map')}
+            title="Back to the Main Map"
           >
             <FontAwesomeIcon icon={faGlobe} />
           </button>
@@ -44,19 +46,23 @@ const AppBar: React.FC<AppBarProps> = ({
           </span>
         </div>
 
-        {/* Search Bar in the center */}
-        <form onSubmit={handleSearch} className="app-bar-search">
-          <div className="search-input-wrapper">
-            <FontAwesomeIcon icon={faSearch} className="search-icon" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for a city"
-              className="search-input"
-            />
-          </div>
-        </form>
+        {/* Render search bar conditionally */}
+        {showSearchBar && (
+          <form onSubmit={handleSearch} className="app-bar-search">
+            <div className="search-input-wrapper">
+              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) =>
+                  setSearchQuery && setSearchQuery(e.target.value)
+                }
+                placeholder="Search for a city"
+                className="search-input"
+              />
+            </div>
+          </form>
+        )}
 
         {/* Icons aligned to the right */}
         <div className="app-bar-icons">

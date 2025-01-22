@@ -4,7 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getVisitedPlaces } from '../../services/api';
 import './VisitedMap.css';
-import { useNavigate } from 'react-router-dom';
+import AppBar from '../app-bar/AppBar';
+import axios from 'axios';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -32,7 +33,31 @@ interface Place {
 const VisitedMap = () => {
   const [visitedPlaces, setVisitedPlaces] = useState<Place[]>([]);
   const mapRef = useRef<L.Map>(null);
-  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Handle search for city
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.get(
+        'https://nominatim.openstreetmap.org/search',
+        {
+          params: { q: searchQuery, format: 'json', 'accept-language': 'en' },
+        }
+      );
+      if (response.data.length > 0) {
+        const { lat, lon } = response.data[0];
+        if (mapRef.current) {
+          mapRef.current.setView([parseFloat(lat), parseFloat(lon)], 13);
+        }
+      } else {
+        alert('City not found!');
+      }
+    } catch (error) {
+      console.error('Failed to search for city:', error);
+      alert('Failed to search for city!');
+    }
+  };
 
   React.useEffect(() => {
     const fetchPlaces = async () => {
@@ -49,12 +74,12 @@ const VisitedMap = () => {
 
   return (
     <div className="visited-places-page">
-      <div className="visited-places-header">
-        <h2>Your Visited Places</h2>
-        <button onClick={() => navigate('/map')} className="back-to-map-button">
-          <b> Back to Main Map </b>
-        </button>
-      </div>
+      <AppBar
+        mapRef={mapRef}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearch={handleSearch}
+      />
 
       <div className="map-container">
         <MapContainer

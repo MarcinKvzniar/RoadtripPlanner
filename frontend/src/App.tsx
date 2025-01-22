@@ -6,8 +6,9 @@ import RegisterForm from './components/register-form/RegisterForm';
 import NotFoundPage from './components/not-found/NotFoundPage';
 import MapComponent from './components/map-component/MapComponent';
 import PrivateRoute from './private-route/PrivateRoute';
-import './App.css';
 import VisitedMap from './components/visited-map/VisitedMap';
+import RoutesComponent from './components/routes-component/RoutesComponent';
+import './App.css';
 
 const App: React.FC = () => {
   return (
@@ -33,7 +34,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/road_trips"
-            element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
+            element={<PrivateRoute element={<RoutesComponent />} />}
           />
 
           {/* Not found route */}

@@ -1,0 +1,39 @@
+.route-plans-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.route-plans-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  color: #000;
+  background-color: #f9f9f9;
+}
+
+.route-plans-container h2 {
+  color: #000;
+}
+
+.loading-message,
+.error-message,
+.no-route-plans {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.route-plans-scrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.route-plan-card {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

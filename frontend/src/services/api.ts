@@ -25,22 +25,12 @@ export const fetchStreetRules = async (country: string) => {
   }
 };
 
-export const fetchUserRoutes = async () => {
+export const getRouteTrips = async () => {
   try {
     const response = await api.get('/route_plans/get_my_route_plans');
     return response.data;
   } catch (error) {
     console.error('Error fetching user routes:', error);
-    throw error;
-  }
-};
-
-export const fetchUserPlaces = async () => {
-  try {
-    const response = await api.get('/route_plans/get_destinations');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user places:', error);
     throw error;
   }
 };
