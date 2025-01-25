@@ -79,10 +79,13 @@ class UserCreate(BaseModel):
 
 
 
-class UserInDB(User):
+class UserInDB(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
+    email: EmailStr
+    full_name: str
+    role: str
     hashed_password: str
-    destinations: list[DestinationModel] = []
+    destinations: List[DestinationModel]
 
     class Config:
         arbitrary_types_allowed = True
