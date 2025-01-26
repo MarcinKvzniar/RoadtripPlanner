@@ -17,7 +17,7 @@ destinations_routes_router = APIRouter()
 
 
 @destinations_routes_router.post("/save_destination", response_model=UserResponse)
-async def save_destination(destination: BaseDestinationModel, authorization: str = Header(...)):
+async def save_destination(destination: DestinationModel, authorization: str = Header(...)):
     """
         Save destination information to user's destinations field
 
@@ -42,6 +42,8 @@ async def save_destination(destination: BaseDestinationModel, authorization: str
         user.destinations.append(destination)
     elif isinstance(destination, RouteModel):
         user.destinations.append(destination)
+    else:
+        print(f'Doesnt work for some reason????')
 
     collection_users.update_one({"_id": ObjectId(user_id)}, {"$set": {"destinations": [dest.dict() for dest in user.destinations]}})
 
