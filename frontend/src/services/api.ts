@@ -17,7 +17,11 @@ api.interceptors.request.use((config) => {
 
 export const fetchStreetRules = async (country: string) => {
   try {
-    const response = await api.get(`/regulations/road_regulations/${country}`);
+    const response = await api.get(
+      `/regulations/road_regulations/${country
+        .charAt(0)
+        .toUpperCase()}${country.slice(1)}`
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching street rules:', error);
@@ -59,6 +63,31 @@ export const getVisitedPlaces = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching visited places:', error);
+    throw error;
+  }
+};
+
+export const saveRoute = async (routePlan: {
+  name: string;
+  route: {
+    _id: string;
+    lat: number;
+    lon: number;
+    address: string;
+    country: string;
+    type: string;
+  }[];
+  date_created: string;
+  creator_id: string;
+}) => {
+  try {
+    const response = await api.post(
+      '/route_plans/create_route_plan',
+      routePlan
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error saving route trip:', error);
     throw error;
   }
 };

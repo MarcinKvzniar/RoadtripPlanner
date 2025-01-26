@@ -20,7 +20,11 @@ import {
   faInfoCircle,
   faMapMarkedAlt,
 } from '@fortawesome/free-solid-svg-icons';
-import { saveVisitedPlace, fetchStreetRules } from '../../services/api';
+import {
+  saveVisitedPlace,
+  fetchStreetRules,
+  saveRoute,
+} from '../../services/api';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -155,8 +159,7 @@ const MapComponent: React.FC = () => {
 
       setMarkers([...markers, visitedMarker]);
 
-      if (type === 'Route') {
-        console.log('Fetched rules: ', fetchRules(country));
+      if (type === 'route') {
         setRouteMarkers([
           ...routeMarkers,
           {
@@ -172,8 +175,6 @@ const MapComponent: React.FC = () => {
       } else if (type === 'visited') {
         await saveVisitedMarker(visitedMarker);
       }
-
-      console.log(`${type} marker:`, visitedMarker);
     } catch (error) {
       console.error('Failed to fetch country name:', error);
       setMarkers([
@@ -195,6 +196,7 @@ const MapComponent: React.FC = () => {
 
   // Fetch route between markers
   const fetchRoute = async () => {
+    console.log(routeMarkers.length);
     if (routeMarkers.length < 2) {
       alert('Please add at least two markers to calculate a route.');
       return;
@@ -293,7 +295,7 @@ const MapComponent: React.FC = () => {
   };
 
   // Handle saving route
-  const saveRoute = async (
+  const saveRoutePlan = async (
     markers: {
       id: string;
       lat: number;
@@ -303,21 +305,38 @@ const MapComponent: React.FC = () => {
       type: string;
     }[]
   ) => {
-    try {
-      await axios.post('', { routeMarkers: markers });
-      console.log('Route saved:', markers);
-    } catch (error) {
-      console.error('Error saving route:', error);
-    }
-  };
-
-  // Save road trip on button click
-  const saveRoadTrip = async () => {
-    if (routeMarkers.length === 0) {
+    if (markers.length === 0) {
       alert('No route markers to save!');
       return;
     }
-    await saveRoute(routeMarkers);
+
+    const tripName = prompt('Enter a name for your road trip:', 'My Road Trip');
+    if (!tripName) {
+      alert('Trip name is required!');
+      return;
+    }
+
+    try {
+      const routePlan = {
+        name: tripName,
+        route: markers.map((marker) => ({
+          _id: marker.id,
+          lat: marker.lat,
+          lon: marker.lon,
+          address: marker.address,
+          country: marker.country,
+          type: marker.type,
+        })),
+        date_created: new Date().toISOString(),
+        creator_id: '',
+      };
+      const response = await saveRoute(routePlan);
+      console.log('Raw response:', response);
+      return response;
+    } catch (error) {
+      console.error('Error saving route plan:', error);
+      alert('Failed to save the route plan.');
+    }
   };
 
   // Fetch street rules for a country
@@ -480,7 +499,7 @@ const MapComponent: React.FC = () => {
           Show Route Details
         </button>
         <button
-          onClick={saveRoadTrip}
+          onClick={() => saveRoutePlan(markers)}
           style={{
             flex: 1,
             margin: '10px 5px',
