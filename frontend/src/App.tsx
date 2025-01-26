@@ -5,6 +5,9 @@ import LoginForm from './components/login-form/LoginForm';
 import RegisterForm from './components/register-form/RegisterForm';
 import NotFoundPage from './components/not-found/NotFoundPage';
 import MapComponent from './components/map-component/MapComponent';
+import PrivateRoute from './private-route/PrivateRoute';
+import VisitedMap from './components/visited-map/VisitedMap';
+import RoutesComponent from './components/routes-component/RoutesComponent';
 import './App.css';
 
 const App: React.FC = () => {
@@ -13,21 +16,30 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/users/login" element={<LoginForm />} />
+          <Route path="/users/register" element={<RegisterForm />} />
+
           {/* Private routes */}
-          <Route path="/map" element={<MapComponent />} />
-          <Route path="/get_me" element={<h1>Nothing is here</h1>} />{' '}
-          {/* TODO */}
           <Route
-            path="/visited-places"
-            element={<h1>Nothing is here</h1>}
-          />{' '}
-          {/* TODO */}
-          <Route path="/road-trips" element={<h1>Nothing is here</h1>} />{' '}
-          {/* TODO */}
+            path="/map"
+            element={<PrivateRoute element={<MapComponent />} />}
+          />
+          <Route
+            path="/get_me"
+            element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
+          />
+          <Route
+            path="/visited_places"
+            element={<PrivateRoute element={<VisitedMap />} />}
+          />
+          <Route
+            path="/road_trips"
+            element={<PrivateRoute element={<RoutesComponent />} />}
+          />
+
           {/* Not found route */}
           <Route path="*" element={<NotFoundPage />} />
+
           {/* Login redirect */}
           <Route path="/" element={<LoginForm />} />
         </Routes>

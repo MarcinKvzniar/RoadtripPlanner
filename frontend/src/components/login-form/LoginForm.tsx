@@ -16,7 +16,7 @@ const LoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await api.post('/login', { email, password });
+      const response = await api.post('/users/login', { email, password });
       const { access_token, refresh_token } = response.data;
       login(access_token, refresh_token);
       navigate('/map');
@@ -55,7 +55,7 @@ const LoginForm: React.FC = () => {
       </form>
       <div className="register-link-container">
         <p>
-          Don't have an account? <Link to="/register">Register here</Link>
+          Don't have an account? <Link to="/users/register">Register here</Link>
         </p>
       </div>
     </div>
