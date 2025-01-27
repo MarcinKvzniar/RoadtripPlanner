@@ -20,11 +20,8 @@ import {
   faInfoCircle,
   faMapMarkedAlt,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-  saveVisitedPlace,
-  fetchStreetRules,
-  saveRoute,
-} from '../../services/api';
+import { saveVisitedPlace, saveRoute } from '../../services/api';
+import StreetRulesDialog from '../street-rules-dialog/StreetRulesDialog';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -74,6 +71,8 @@ const MapComponent: React.FC = () => {
   const [route, setRoute] = useState<[number, number][]>([]);
   const [travelTimes, setTravelTimes] = useState<string[]>([]);
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
+  const [isStreetRulesDialogOpen, setIsStreetRulesDialogOpen] = useState(false);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
   // Handle click on the map to show the modal
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
@@ -339,16 +338,6 @@ const MapComponent: React.FC = () => {
     }
   };
 
-  // Fetch street rules for a country
-  const fetchRules = async (country: string) => {
-    try {
-      const response = await fetchStreetRules(country);
-      console.log('Street rules fetched:', response);
-    } catch (error) {
-      console.error('Error fetching street rules:', error);
-    }
-  };
-
   return (
     <div className="map-page">
       <AppBar
@@ -559,9 +548,28 @@ const MapComponent: React.FC = () => {
                 )
             )}
           </div>
+          <button
+            onClick={() => {
+              const uniqueCountries = Array.from(
+                new Set(routeMarkers.map((m) => m.country))
+              );
+              setSelectedCountries(uniqueCountries);
+              setIsStreetRulesDialogOpen(true);
+            }}
+            style={{ marginBottom: '10px' }}
+          >
+            Show Street Rules
+          </button>
           <button onClick={() => setIsRouteDialogOpen(false)}>Close</button>
         </div>
       )}
+
+      {/* Street rules dialog */}
+      <StreetRulesDialog
+        isOpen={isStreetRulesDialogOpen}
+        onClose={() => setIsStreetRulesDialogOpen(false)}
+        countries={selectedCountries}
+      />
     </div>
   );
 };
