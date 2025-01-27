@@ -30,6 +30,51 @@ interface Place {
   visited: boolean;
 }
 
+/**
+ * VisitedMap component renders a map with markers for visited places.
+ * It allows users to search for cities and centers the map on the searched city.
+ *
+ * @component
+ * @example
+ * return (
+ *   <VisitedMap />
+ * )
+ *
+ * @returns {JSX.Element} The rendered component.
+ *
+ * @remarks
+ * This component uses the following hooks:
+ * - `useState` to manage the state of visited places and search query.
+ * - `useRef` to reference the map instance.
+ * - `useEffect` to fetch visited places on component mount.
+ *
+ * @function handleSearch
+ * Handles the search for a city and centers the map on the searched city.
+ *
+ * @param {React.FormEvent} e - The form event.
+ *
+ * @async
+ * @throws Will alert the user if the city is not found or if the search fails.
+ *
+ * @function fetchPlaces
+ * Fetches the visited places from the server and updates the state.
+ *
+ * @async
+ * @throws Will log an error if fetching visited places fails.
+ *
+ * @returns {Promise<void>}
+ *
+ * @requires axios
+ * @requires react
+ * @requires leaflet
+ * @requires getVisitedPlaces
+ * @requires getFlagIcon
+ * @requires AppBar
+ * @requires MapContainer
+ * @requires TileLayer
+ * @requires Marker
+ * @requires Popup
+ */
 const VisitedMap = () => {
   const [visitedPlaces, setVisitedPlaces] = useState<Place[]>([]);
   const mapRef = useRef<L.Map>(null);

@@ -40,6 +40,25 @@ interface StreetRule {
   };
 }
 
+/**
+ * Component for displaying street rules in a modal dialog.
+ *
+ * @component
+ * @param {StreetRulesDialogProps} props - The properties for the StreetRulesDialog component.
+ * @param {boolean} props.isOpen - Indicates whether the dialog is open.
+ * @param {() => void} props.onClose - Function to call when the dialog is closed.
+ * @param {string[]} props.countries - List of countries to fetch street rules for.
+ *
+ * @returns {JSX.Element | null} The rendered component or null if the dialog is not open.
+ *
+ * @example
+ * <StreetRulesDialog
+ *   isOpen={isOpen}
+ *   onClose={handleClose}
+ *   countries={['USA', 'Canada']}
+ * />
+ */
+
 const StreetRulesDialog: React.FC<StreetRulesDialogProps> = ({
   isOpen,
   onClose,

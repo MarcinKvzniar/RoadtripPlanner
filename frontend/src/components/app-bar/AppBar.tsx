@@ -18,6 +18,19 @@ interface AppBarProps {
   showSearchBar?: boolean;
 }
 
+/**
+ * AppBar component renders the top navigation bar of the application.
+ * It includes a logo, a search bar, and navigation buttons.
+ *
+ * @param {Object} props - The properties object.
+ * @param {React.RefObject<HTMLDivElement>} props.mapRef - Reference to the map element.
+ * @param {React.Dispatch<React.SetStateAction<string>>} props.setSearchQuery - Function to update the search query state.
+ * @param {React.FormEventHandler<HTMLFormElement>} props.handleSearch - Function to handle the search form submission.
+ * @param {string} props.searchQuery - The current search query string.
+ * @param {boolean} [props.showSearchBar=true] - Flag to show or hide the search bar.
+ *
+ * @returns {JSX.Element} The rendered AppBar component.
+ */
 const AppBar: React.FC<AppBarProps> = ({
   mapRef,
   setSearchQuery,
@@ -29,9 +42,8 @@ const AppBar: React.FC<AppBarProps> = ({
 
   return (
     <div className="app-bar">
-      {/* Container for search bar and icons */}
       <div className="app-bar-content">
-        {/* Logo on the left */}
+        {/* Logo */}
         <div className="app-bar-logo">
           <button
             className="logo-icon"
@@ -46,7 +58,7 @@ const AppBar: React.FC<AppBarProps> = ({
           </span>
         </div>
 
-        {/* Render search bar conditionally */}
+        {/* Search bar */}
         {showSearchBar && (
           <form onSubmit={handleSearch} className="app-bar-search">
             <div className="search-input-wrapper">
@@ -64,7 +76,7 @@ const AppBar: React.FC<AppBarProps> = ({
           </form>
         )}
 
-        {/* Icons aligned to the right */}
+        {/* Navigation buttons */}
         <div className="app-bar-icons">
           <button
             className="app-bar-button"

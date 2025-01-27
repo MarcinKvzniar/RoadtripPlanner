@@ -36,6 +36,59 @@ const getFlagIcon = (country: string) => {
   });
 };
 
+/**
+ * MapComponent is a React functional component that provides an interactive map interface
+ * for planning road trips. It allows users to add markers, calculate routes, and save road trip plans.
+ *
+ * @component
+ * @example
+ * return (
+ *   <MapComponent />
+ * )
+ *
+ * @returns {JSX.Element} The rendered map component.
+ *
+ * @remarks
+ * This component uses the Leaflet library for map rendering and OpenStreetMap for geocoding and routing.
+ * It includes functionalities such as adding markers, calculating routes, and saving road trip plans.
+ *
+ * @function
+ * @name MapComponent
+ *
+ * @typedef {Object} Marker
+ * @property {string} id - The unique identifier for the marker.
+ * @property {number} lat - The latitude of the marker.
+ * @property {number} lon - The longitude of the marker.
+ * @property {string} address - The address of the marker.
+ * @property {string} country - The country of the marker.
+ * @property {string} type - The type of the marker (e.g., 'visited', 'route').
+ * @property {boolean} visited - Whether the marker has been visited.
+ *
+ * @typedef {Object} ModalData
+ * @property {number} lat - The latitude for the modal data.
+ * @property {number} lon - The longitude for the modal data.
+ * @property {string} address - The address for the modal data.
+ * @property {string} country - The country for the modal data.
+ * @property {boolean} isOpen - Whether the modal is open.
+ *
+ * @typedef {Object} RoutePlan
+ * @property {string} name - The name of the road trip.
+ * @property {Array<Marker>} route - The list of markers in the route.
+ * @property {string} date_created - The date the route plan was created.
+ * @property {string} creator_id - The ID of the creator.
+ *
+ * @state {Array<Marker>} markers - The list of markers on the map.
+ * @state {ModalData} modalData - The data for the modal.
+ * @state {string} searchQuery - The search query for finding cities.
+ * @state {React.RefObject<L.Map>} mapRef - The reference to the Leaflet map instance.
+ * @state {Array<Marker>} routeMarkers - The list of markers in the route.
+ * @state {Array<[number, number]>} route - The list of coordinates for the route.
+ * @state {Array<string>} travelTimes - The list of travel times between route markers.
+ * @state {boolean} isRouteDialogOpen - Whether the route dialog is open.
+ * @state {boolean} isStreetRulesDialogOpen - Whether the street rules dialog is open.
+ * @state {Array<string>} selectedCountries - The list of selected countries for street rules.
+ */
+
 const MapComponent: React.FC = () => {
   const [markers, setMarkers] = useState<
     {

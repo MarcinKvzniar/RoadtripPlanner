@@ -15,6 +15,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Fetch street rules for a specific country.
+ * @returns {Promise<Object>} The street rules data.
+ */
 export const fetchStreetRules = async (country: string) => {
   try {
     const response = await api.get(
@@ -29,6 +33,10 @@ export const fetchStreetRules = async (country: string) => {
   }
 };
 
+/**
+ * Get route trips for the current user.
+ * @returns {Promise<Object[]>} The user's route trips.
+ */
 export const getRouteTrips = async () => {
   try {
     const response = await api.get('/route_plans/get_my_route_plans');
@@ -39,6 +47,11 @@ export const getRouteTrips = async () => {
   }
 };
 
+/**
+ * Save a visited place.
+ * @param {Object} marker - The marker object containing place details.
+ * @returns {Promise<Object>} The saved place data.
+ */
 export const saveVisitedPlace = async (marker: {
   id: string;
   lat: number;
@@ -57,6 +70,10 @@ export const saveVisitedPlace = async (marker: {
   }
 };
 
+/**
+ * Get visited places for the current user.
+ * @returns {Promise<Object[]>} The user's visited places.
+ */
 export const getVisitedPlaces = async () => {
   try {
     const response = await api.get('/route_plans/get_destinations');
@@ -67,6 +84,10 @@ export const getVisitedPlaces = async () => {
   }
 };
 
+/**
+ * Save a route plan.
+ * @returns {Promise<Object>} The saved route plan data.
+ */
 export const saveRoute = async (routePlan: {
   name: string;
   route: {
@@ -92,6 +113,10 @@ export const saveRoute = async (routePlan: {
   }
 };
 
+/**
+ * Get the current user information.
+ * @returns {Promise<Object>} The current user data.
+ */
 export const getCurrentUser = async () => {
   try {
     const response = await api.get('/users/my_user');

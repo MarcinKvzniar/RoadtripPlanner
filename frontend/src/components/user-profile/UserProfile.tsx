@@ -9,6 +9,18 @@ interface UserProfileData {
   destinations: string[];
 }
 
+/**
+ * UserProfile component fetches and displays the current user's profile information.
+ *
+ * This component:
+ * - Fetches the user profile data when it mounts.
+ * - Displays a loading message while the data is being fetched.
+ * - Displays an error message if the data fetch fails.
+ * - Displays the user's email, full name, and the number of visited places once the data is successfully fetched.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered component.
+ */
 const UserProfile: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
