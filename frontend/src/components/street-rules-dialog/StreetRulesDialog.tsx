@@ -90,9 +90,9 @@ const StreetRulesDialog: React.FC<StreetRulesDialogProps> = ({
             <div key={index} className="rule-card">
               <h3>{rule.country_name}</h3>
               <p>
-                <strong>Speed Limits:</strong> City:{' '}
-                {rule.speed_limits.default.city} km/h, Highway:{' '}
-                {rule.speed_limits.default.highway} km/h, School Zone:{' '}
+                <strong>Speed Limits:</strong> City:{'\n'}
+                {rule.speed_limits.default.city} km/h, Highway:{'\n'}
+                {rule.speed_limits.default.highway} km/h, School Zone:{'\n'}
                 {rule.speed_limits.default.school_zone} km/h
               </p>
               <p>

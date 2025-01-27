@@ -195,7 +195,6 @@ const MapComponent: React.FC = () => {
 
   // Fetch route between markers
   const fetchRoute = async () => {
-    console.log(routeMarkers.length);
     if (routeMarkers.length < 2) {
       alert('Please add at least two markers to calculate a route.');
       return;

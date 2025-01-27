@@ -91,3 +91,13 @@ export const saveRoute = async (routePlan: {
     throw error;
   }
 };
+
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get('/users/my_user');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    throw error;
+  }
+};

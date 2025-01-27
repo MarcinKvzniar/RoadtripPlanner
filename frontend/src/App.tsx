@@ -9,6 +9,7 @@ import PrivateRoute from './private-route/PrivateRoute';
 import VisitedMap from './components/visited-map/VisitedMap';
 import RoutesComponent from './components/routes-component/RoutesComponent';
 import './App.css';
+import UserProfile from './components/user-profile/UserProfile';
 
 const App: React.FC = () => {
   return (
@@ -26,7 +27,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/get_me"
-            element={<PrivateRoute element={<h1>Nothing is here</h1>} />}
+            element={<PrivateRoute element={<UserProfile />} />}
           />
           <Route
             path="/visited_places"
