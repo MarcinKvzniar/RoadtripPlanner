@@ -20,7 +20,8 @@ import {
   faInfoCircle,
   faMapMarkedAlt,
 } from '@fortawesome/free-solid-svg-icons';
-import { saveVisitedPlace, fetchStreetRules } from '../../services/api';
+import { saveVisitedPlace, saveRoute } from '../../services/api';
+import StreetRulesDialog from '../street-rules-dialog/StreetRulesDialog';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -34,6 +35,59 @@ const getFlagIcon = (country: string) => {
     popupAnchor: [0, -16],
   });
 };
+
+/**
+ * MapComponent is a React functional component that provides an interactive map interface
+ * for planning road trips. It allows users to add markers, calculate routes, and save road trip plans.
+ *
+ * @component
+ * @example
+ * return (
+ *   <MapComponent />
+ * )
+ *
+ * @returns {JSX.Element} The rendered map component.
+ *
+ * @remarks
+ * This component uses the Leaflet library for map rendering and OpenStreetMap for geocoding and routing.
+ * It includes functionalities such as adding markers, calculating routes, and saving road trip plans.
+ *
+ * @function
+ * @name MapComponent
+ *
+ * @typedef {Object} Marker
+ * @property {string} id - The unique identifier for the marker.
+ * @property {number} lat - The latitude of the marker.
+ * @property {number} lon - The longitude of the marker.
+ * @property {string} address - The address of the marker.
+ * @property {string} country - The country of the marker.
+ * @property {string} type - The type of the marker (e.g., 'visited', 'route').
+ * @property {boolean} visited - Whether the marker has been visited.
+ *
+ * @typedef {Object} ModalData
+ * @property {number} lat - The latitude for the modal data.
+ * @property {number} lon - The longitude for the modal data.
+ * @property {string} address - The address for the modal data.
+ * @property {string} country - The country for the modal data.
+ * @property {boolean} isOpen - Whether the modal is open.
+ *
+ * @typedef {Object} RoutePlan
+ * @property {string} name - The name of the road trip.
+ * @property {Array<Marker>} route - The list of markers in the route.
+ * @property {string} date_created - The date the route plan was created.
+ * @property {string} creator_id - The ID of the creator.
+ *
+ * @state {Array<Marker>} markers - The list of markers on the map.
+ * @state {ModalData} modalData - The data for the modal.
+ * @state {string} searchQuery - The search query for finding cities.
+ * @state {React.RefObject<L.Map>} mapRef - The reference to the Leaflet map instance.
+ * @state {Array<Marker>} routeMarkers - The list of markers in the route.
+ * @state {Array<[number, number]>} route - The list of coordinates for the route.
+ * @state {Array<string>} travelTimes - The list of travel times between route markers.
+ * @state {boolean} isRouteDialogOpen - Whether the route dialog is open.
+ * @state {boolean} isStreetRulesDialogOpen - Whether the street rules dialog is open.
+ * @state {Array<string>} selectedCountries - The list of selected countries for street rules.
+ */
 
 const MapComponent: React.FC = () => {
   const [markers, setMarkers] = useState<
@@ -70,6 +124,8 @@ const MapComponent: React.FC = () => {
   const [route, setRoute] = useState<[number, number][]>([]);
   const [travelTimes, setTravelTimes] = useState<string[]>([]);
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
+  const [isStreetRulesDialogOpen, setIsStreetRulesDialogOpen] = useState(false);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
   // Handle click on the map to show the modal
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
@@ -155,8 +211,7 @@ const MapComponent: React.FC = () => {
 
       setMarkers([...markers, visitedMarker]);
 
-      if (type === 'Route') {
-        console.log('Fetched rules: ', fetchRules(country));
+      if (type === 'route') {
         setRouteMarkers([
           ...routeMarkers,
           {
@@ -172,8 +227,6 @@ const MapComponent: React.FC = () => {
       } else if (type === 'visited') {
         await saveVisitedMarker(visitedMarker);
       }
-
-      console.log(`${type} marker:`, visitedMarker);
     } catch (error) {
       console.error('Failed to fetch country name:', error);
       setMarkers([
@@ -293,7 +346,7 @@ const MapComponent: React.FC = () => {
   };
 
   // Handle saving route
-  const saveRoute = async (
+  const saveRoutePlan = async (
     markers: {
       id: string;
       lat: number;
@@ -303,30 +356,37 @@ const MapComponent: React.FC = () => {
       type: string;
     }[]
   ) => {
-    try {
-      await axios.post('', { routeMarkers: markers });
-      console.log('Route saved:', markers);
-    } catch (error) {
-      console.error('Error saving route:', error);
-    }
-  };
-
-  // Save road trip on button click
-  const saveRoadTrip = async () => {
-    if (routeMarkers.length === 0) {
+    if (markers.length === 0) {
       alert('No route markers to save!');
       return;
     }
-    await saveRoute(routeMarkers);
-  };
 
-  // Fetch street rules for a country
-  const fetchRules = async (country: string) => {
+    const tripName = prompt('Enter a name for your road trip:', 'My Road Trip');
+    if (!tripName) {
+      alert('Trip name is required!');
+      return;
+    }
+
     try {
-      const response = await fetchStreetRules(country);
-      console.log('Street rules fetched:', response);
+      const routePlan = {
+        name: tripName,
+        route: markers.map((marker) => ({
+          _id: marker.id,
+          lat: marker.lat,
+          lon: marker.lon,
+          address: marker.address,
+          country: marker.country,
+          type: marker.type,
+        })),
+        date_created: new Date().toISOString(),
+        creator_id: '',
+      };
+      const response = await saveRoute(routePlan);
+      console.log('Raw response:', response);
+      return response;
     } catch (error) {
-      console.error('Error fetching street rules:', error);
+      console.error('Error saving route plan:', error);
+      alert('Failed to save the route plan.');
     }
   };
 
@@ -480,7 +540,7 @@ const MapComponent: React.FC = () => {
           Show Route Details
         </button>
         <button
-          onClick={saveRoadTrip}
+          onClick={() => saveRoutePlan(markers)}
           style={{
             flex: 1,
             margin: '10px 5px',
@@ -540,9 +600,28 @@ const MapComponent: React.FC = () => {
                 )
             )}
           </div>
+          <button
+            onClick={() => {
+              const uniqueCountries = Array.from(
+                new Set(routeMarkers.map((m) => m.country))
+              );
+              setSelectedCountries(uniqueCountries);
+              setIsStreetRulesDialogOpen(true);
+            }}
+            style={{ marginBottom: '10px' }}
+          >
+            Show Street Rules
+          </button>
           <button onClick={() => setIsRouteDialogOpen(false)}>Close</button>
         </div>
       )}
+
+      {/* Street rules dialog */}
+      <StreetRulesDialog
+        isOpen={isStreetRulesDialogOpen}
+        onClose={() => setIsStreetRulesDialogOpen(false)}
+        countries={selectedCountries}
+      />
     </div>
   );
 };

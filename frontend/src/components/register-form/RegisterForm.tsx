@@ -5,6 +5,20 @@ import { faUser, faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import './RegisterForm.css';
 import { Link, useNavigate } from 'react-router-dom';
 
+/**
+ * RegisterForm component allows users to register by providing their full name, email, password, and confirming the password.
+ * It validates the input fields and displays appropriate error messages if the validation fails.
+ * On successful registration, it navigates the user to the login page with a success message.
+ *
+ * @component
+ * @example
+ * return (
+ *   <RegisterForm />
+ * )
+ *
+ * @returns {JSX.Element} The rendered RegisterForm component.
+ */
+
 const RegisterForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

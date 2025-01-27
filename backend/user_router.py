@@ -8,7 +8,7 @@ from typing import Optional, List
 import bson
 from icecream import ic
 import jwt
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from pydantic import EmailStr
 from bson import ObjectId
 from fastapi import Body, HTTPException, status
@@ -282,8 +282,8 @@ def extract_user_id_from_token(token: str) -> str:
         )
 
 
-@user_router.post("/my_user", response_model=UserResponse)
-async def extract_user_info(token_request: TokenRequest = Body(...)):
+@user_router.get("/my_user", response_model=UserResponse)
+async def extract_user_info(authorization: str = Header(...)):
     """
         Get current user information based on jwt token
 
@@ -296,7 +296,7 @@ async def extract_user_info(token_request: TokenRequest = Body(...)):
         Raises:
             HTTP Exception 404 if user id is not existent.
      """
-    token = token_request.access_token
+    token = authorization.split(" ")[1]
     user_id = extract_user_id_from_token(token)
     user = get_user_by_id(collection_users, user_id)
     if not user:

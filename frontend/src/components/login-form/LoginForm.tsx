@@ -7,6 +7,25 @@ import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
 import './LoginForm.css';
 
+/**
+ * LoginForm component allows users to log in to the RoadTrip Planner application.
+ * It provides input fields for email and password, and handles form submission.
+ *
+ * @component
+ * @example
+ * return (
+ *   <LoginForm />
+ * )
+ *
+ * @returns {JSX.Element} The rendered login form component.
+ *
+ * @remarks
+ * This component uses the `useAuth` hook to access the login function and the `useNavigate` hook
+ * from `react-router-dom` to navigate to the map page upon successful login.
+ *
+ * @function
+ * @name LoginForm
+ */
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
