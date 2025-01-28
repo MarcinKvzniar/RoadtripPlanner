@@ -6,19 +6,12 @@ description: Main script
 """
 
 # from dotenv import load_dotenv
-import os
-from typing import Optional, List
-import bson
-from icecream import ic
-import jwt
-from fastapi import Depends, FastAPI, Request, Header
-from pymongo.mongo_client import MongoClient
+from fastapi import FastAPI
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from user_router import user_router
-from regulations_router import regulations_router
-from destinations_routes_router import destinations_routes_router
-
+from backend.routers.user_router import user_router
+from backend.routers.regulations_router import regulations_router
+from backend.routers.destinations_routes_router import destinations_routes_router
 load_dotenv()
 app = FastAPI(root_path="/api/v1")
 

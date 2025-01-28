@@ -12,11 +12,12 @@ import jwt
 from fastapi.security import OAuth2PasswordBearer
 from icecream import ic
 from passlib.context import CryptContext
+from fastapi import HTTPException, status
 
 # to get a string like this run:
 # openssl rand -hex 32
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 SECRET_KEY = os.getenv("SECRET_HASH_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -57,3 +58,12 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+
+def check_user_role(user, required_role):
+    if user.role != required_role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this resource."
+        )
