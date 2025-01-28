@@ -21,11 +21,7 @@ api.interceptors.request.use((config) => {
  */
 export const fetchStreetRules = async (country: string) => {
   try {
-    const response = await api.get(
-      `/regulations/road_regulations/${country
-        .charAt(0)
-        .toUpperCase()}${country.slice(1)}`
-    );
+    const response = await api.get(`/regulations/road_regulations/${country}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching street rules:', error);

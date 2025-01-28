@@ -22,6 +22,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { saveVisitedPlace, saveRoute } from '../../services/api';
 import StreetRulesDialog from '../street-rules-dialog/StreetRulesDialog';
+import SaveRouteDialog from '../save-route-dialog/SaveRouteDialog';
 
 const getFlagIcon = (country: string) => {
   const iconUrl =
@@ -126,6 +127,9 @@ const MapComponent: React.FC = () => {
   const [isRouteDialogOpen, setIsRouteDialogOpen] = useState(false);
   const [isStreetRulesDialogOpen, setIsStreetRulesDialogOpen] = useState(false);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState('');
+  const [tripName, setTripName] = useState('');
 
   // Handle click on the map to show the modal
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
@@ -346,27 +350,11 @@ const MapComponent: React.FC = () => {
   };
 
   // Handle saving route
-  const saveRoutePlan = async (
-    markers: {
-      id: string;
-      lat: number;
-      lon: number;
-      address: string;
-      country: string;
-      type: string;
-    }[]
-  ) => {
-    if (markers.length === 0) {
-      alert('No route markers to save!');
-      return;
-    }
+  const handleCloseSaveDialog = () => {
+    setIsSaveDialogOpen(false);
+  };
 
-    const tripName = prompt('Enter a name for your road trip:', 'My Road Trip');
-    if (!tripName) {
-      alert('Trip name is required!');
-      return;
-    }
-
+  const handleSaveRoute = async () => {
     try {
       const routePlan = {
         name: tripName,
@@ -383,11 +371,32 @@ const MapComponent: React.FC = () => {
       };
       const response = await saveRoute(routePlan);
       console.log('Raw response:', response);
+      setIsSaveDialogOpen(false);
       return response;
     } catch (error) {
       console.error('Error saving route plan:', error);
-      alert('Failed to save the route plan.');
+      setDialogMessage('Failed to save the route plan.');
+      setIsSaveDialogOpen(true);
     }
+  };
+
+  const saveRoutePlan = async (
+    markers: {
+      id: string;
+      lat: number;
+      lon: number;
+      address: string;
+      country: string;
+      type: string;
+    }[]
+  ) => {
+    if (markers.length === 0) {
+      setDialogMessage('No route markers to save!');
+      setIsSaveDialogOpen(true);
+      return;
+    }
+
+    setIsSaveDialogOpen(true);
   };
 
   return (
@@ -622,6 +631,18 @@ const MapComponent: React.FC = () => {
         onClose={() => setIsStreetRulesDialogOpen(false)}
         countries={selectedCountries}
       />
+
+      {/* Save dialog */}
+      <SaveRouteDialog
+        title="Save Route"
+        isOpen={isSaveDialogOpen}
+        onClose={handleCloseSaveDialog}
+        onSave={handleSaveRoute}
+        tripName={tripName}
+        setTripName={setTripName}
+      >
+        {dialogMessage}
+      </SaveRouteDialog>
     </div>
   );
 };
