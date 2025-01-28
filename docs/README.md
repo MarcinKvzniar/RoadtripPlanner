@@ -28,4 +28,4 @@ The app is designed to enhance your travel planning by providing useful and inte
   MongoDB
 
 - **Authentication**:
-  JWT Token, RBAC with admin and user roles
+  JWT Token, RBAC with user role
