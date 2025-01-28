@@ -9,9 +9,11 @@ from typing import List
 from fastapi import  Header, APIRouter
 from bson import ObjectId
 from fastapi import HTTPException
-from user_router import extract_user_id_from_token, get_user_by_id
-from models import UserResponse, DestinationModel, BaseDestinationModel, RouteModel, RoutePlan
-from database import collection_users, collection_route_plans
+
+from backend.utils.security import check_user_role
+from backend.utils.utils import extract_user_id_from_token, get_user_from_token, get_user_by_id
+from backend.models.models import UserResponse, DestinationModel, BaseDestinationModel, RouteModel, RoutePlan
+from backend.utils.database import collection_users, collection_route_plans
 
 destinations_routes_router = APIRouter()
 
@@ -32,11 +34,11 @@ async def save_destination(destination: DestinationModel, authorization: str = H
             HTTP Exception 401 if token is invalid or user not found.
             HTTP Exception 400 if destination name is not unique.
      """
-    token = authorization.split(" ")[1]
-    user_id = extract_user_id_from_token(token)
+    user_id = extract_user_id_from_token(authorization)
     user = get_user_by_id(collection_users, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    check_user_role(user, "USER")
 
     if isinstance(destination, DestinationModel):
         user.destinations.append(destination)
@@ -55,9 +57,9 @@ async def retrieve_destination_multiple(authorization: str = Header(...)):
     """
     Get all destinations for the current user (JWT)
     """
-    token = authorization.split(" ")[1]
-    user_id = extract_user_id_from_token(token)
+    user_id = extract_user_id_from_token(authorization)
     user = get_user_by_id(collection_users, user_id)
+    check_user_role(user, "USER")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -80,13 +82,11 @@ async def update_destination(destination: BaseDestinationModel, authorization: s
             HTTP Exception 401 if token is invalid or user not found.
             HTTP Exception 404 if destination not found.
      """
-    token = authorization.split(" ")[1]
-    user_id = extract_user_id_from_token(token)
-    user = get_user_by_id(collection_users, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+    user = get_user_from_token(authorization)
+    user_id = extract_user_id_from_token(authorization)
     destination_id = ObjectId(destination.id)
+    check_user_role(user, "USER")
+
     for i, dest in enumerate(user.destinations):
         if dest.id == str(destination_id):
             user.destinations[i] = destination
@@ -117,11 +117,12 @@ async def create_route_plan(route_plan: RoutePlan, authorization: str = Header(.
         HTTPException 401: If the user is not authenticated.
         HTTPException 500: If the insertion fails.
     """
-    token = authorization.split(" ")[1]
-    user_id = extract_user_id_from_token(token)
+    user_id = extract_user_id_from_token(authorization)
+
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token or user not authenticated")
-
+    user = get_user_from_token(authorization)
+    check_user_role(user, "USER")
     route_plan_data = route_plan.dict()
     route_plan_data["creator_id"] = user_id
     route_plan_data["date_created"] = datetime.utcnow()
@@ -147,8 +148,9 @@ async def get_my_route_plans(authorization: str = Header(...)):
     Raises:
         HTTPException 401: If the user is not authenticated.
     """
-    token = authorization.split(" ")[1]
-    user_id = extract_user_id_from_token(token)
+    user_id = extract_user_id_from_token(authorization)
+    user = get_user_from_token(authorization)
+    check_user_role(user, "USER")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token or user not authenticated")
 

@@ -6,14 +6,11 @@ description: Router for regulations module
 """
 
 # from dotenv import load_dotenv
-import os
-from typing import Optional, List
-from fastapi import Depends, FastAPI, Request, Header, APIRouter
-from fastapi import Body, HTTPException, status
-from datetime import datetime
-from user_router import extract_user_id_from_token
-from models import RoadRegulation, RoutePlan
-from database import collection_route_plans, collection_users, collection_road_regulations
+from typing import List
+from fastapi import APIRouter
+from fastapi import HTTPException
+from backend.models.models import RoadRegulation
+from backend.utils.database import collection_road_regulations
 regulations_router = APIRouter()
 
 

@@ -4,22 +4,22 @@ created: 2025-01-15
 license: none
 description: Router for user functionalities
 """
-from typing import Optional, List
-import bson
+from typing import List
 from icecream import ic
 import jwt
 from fastapi import APIRouter, Header
 from pydantic import EmailStr
-from bson import ObjectId
 from fastapi import Body, HTTPException, status
 from jwt.exceptions import InvalidTokenError
-from datetime import timedelta, datetime
+from datetime import timedelta
 from fastapi import Request
-from models import UserCreate, UserInDB, Token, LoginRequest, RegisterRequest, UserResponse, \
+from backend.models.models import UserCreate, UserInDB, Token, LoginRequest, RegisterRequest, UserResponse, \
     RefreshRequest, TokenRequest
-from security import get_password_hash, verify_password, oauth2_scheme, SECRET_KEY, ALGORITHM, \
+from backend.utils.security import get_password_hash, verify_password, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, REFRESH_TOKEN_EXPIRE_MINUTES, create_refresh_token
-from database import collection_users
+from backend.utils.database import collection_users
+from backend.utils.utils import extract_user_id_from_token, get_user_by_id
+
 user_router = APIRouter()
 
 async def validate_user_create(request: Request):
@@ -91,34 +91,6 @@ def authenticate_user(collection, email: EmailStr, password: str):
         return False
     return user
 
-
-def get_user_by_id(collection, user_id: str):
-    """
-        Retrieve user from db based on user_id - BSON
-
-        Args:
-            collection (Collection): The database collection to query.
-            user_id (str): The id of the user.
-
-        Returns:
-            UserResponse: full information about user excluding pesel, hashed password
-
-        Raises:
-            HTTP Exception 400 when invalid ID format
-            HTTP Exception 404 when user not found
-        """
-    ic("user id here is")
-    ic(user_id)
-    try:
-        user_dict = collection.find_one({"_id": ObjectId(user_id)})
-    except bson.errors.InvalidId:
-        ic("Invalid user ID format")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID format")
-    if user_dict:
-        user_dict["_id"] = str(user_dict["_id"])
-        return UserResponse(**user_dict)
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
 @user_router.post("/login", response_model=Token)
 async def login_for_access_token(
@@ -250,38 +222,6 @@ async def refresh_access_token(refresh_request: RefreshRequest = Body(...)):
     return Token(access_token=access_token, refresh_token=token)
 
 
-def extract_user_id_from_token(token: str) -> str:
-    """
-        Util function to retrieve user_id from jwt
-
-        Args:
-            token (str):  token
-
-        Returns:
-            user_id (str): id of user
-
-        Raises:
-            HTTP Exception 401 if user id is not existent or invalid token.
-     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
-        ic("Extracted user_id from token:", user_id)
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return user_id
-    except InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-
 @user_router.get("/my_user", response_model=UserResponse)
 async def extract_user_info(authorization: str = Header(...)):
     """
@@ -319,5 +259,3 @@ async def get_all_users():
     for user in users:
         user["_id"] = str(user["_id"])
     return [UserResponse(**user) for user in users]
-
-
